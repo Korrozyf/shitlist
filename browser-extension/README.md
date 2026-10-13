@@ -40,12 +40,12 @@ l'article afin que l'utilisateur puisse vérifier pourquoi le nom a été repér
 > L'extension n'est pas (encore) publiée sur les magasins officiels. Des
 > paquets distincts sont générés car Chrome et Firefox n'utilisent pas la même
 > déclaration de tâche d'arrière-plan en Manifest V3 :
-> `shitlist_v2.3.0_chrome.zip` pour Chrome et `shitlist_v2.3.0_firefox.xpi`
+> `shitlist_v2.3.1_chrome.zip` pour Chrome et `shitlist_v2.3.1_firefox.xpi`
 > pour Firefox.
 
 ### Sur Chrome, Edge ou Brave
 
-1. Décompressez **`shitlist_v2.3.0_chrome.zip`** dans un dossier permanent.
+1. Décompressez **`shitlist_v2.3.1_chrome.zip`** dans un dossier permanent.
 2. Ouvrez `chrome://extensions` (sur Edge : `edge://extensions`) et activez
    **« Mode développeur »**.
 3. Cliquez sur **« Charger l'extension non empaquetée »** et choisissez le
@@ -59,7 +59,7 @@ La variante Chrome utilise `background.service_worker`, sans la clé
 
 1. Ouvrez `about:debugging#/runtime/this-firefox`.
 2. Cliquez sur **« Charger un module temporaire… »**.
-3. Sélectionnez **`shitlist_v2.3.0_firefox.xpi`**.
+3. Sélectionnez **`shitlist_v2.3.1_firefox.xpi`**.
 4. L'icône 💩 apparaît dans la barre d'outils.
 
 > ⚠️ Le chargement depuis `about:debugging` est temporaire : Firefox oublie le
@@ -274,3 +274,12 @@ détection ne détermine ni le rôle de la personne ni une quelconque responsabi
 Oui, tout est enregistré dans le navigateur et survit aux fermetures (sauf, sur
 Firefox, si l'extension a été chargée en mode temporaire — voir la section
 Installation).
+
+---
+
+## 10. Licence
+
+Le code source et les éléments originaux de Shitlist sont distribués sous la
+licence [MIT](../LICENSE). Le fichier `LICENSE` est inclus dans les paquets
+Chrome et Firefox. Les composants tiers éventuels restent soumis à leurs
+propres avis de licence.

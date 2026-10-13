@@ -15,6 +15,7 @@ copy_extension() {
   done
   cp -R "$EXT_DIR/lib" "$EXT_DIR/icons" "$target_dir/"
   cp "$EXT_DIR/manifest.json" "$target_dir/manifest.json"
+  cp "$OUT_DIR/LICENSE" "$target_dir/LICENSE"
 }
 
 make_manifest() {
