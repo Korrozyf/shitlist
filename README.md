@@ -1,60 +1,61 @@
-# Shitlist 💩 — extension de navigateur
+# Shitlist 💩 — browser extension
 
-[![Licence MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Code source de l'extension Shitlist, publiée pour Chrome et Firefox. La version
-actuelle est **2.3.2**.
+Source code for the Shitlist extension for Chrome and Firefox. The current
+version is **2.3.3**.
 
-L'extension recherche des articles dans des flux RSS configurés et des recherches
-Google Actualités générées à partir des mots-clés choisis. Les noms détectés
-restent des **propositions** : l'utilisateur doit examiner les articles et
-confirmer explicitement l'ajout à sa liste. Les articles associés peuvent ensuite
-être ouverts individuellement depuis la liste ou le menu affiché sur une page.
+The extension searches configured RSS feeds and Google News searches generated
+from selected keywords. Detected names are only **proposals**: a person must
+review each article and explicitly approve a name before it enters the active
+list. Associated articles can then be opened individually from the list or from
+the menu shown on a web page.
 
-> **Important :** une mention dans un article ne détermine ni le rôle d'une
-> personne ni sa responsabilité. La détection de noms est heuristique et peut
-> produire des omissions ou des faux positifs. Toute proposition doit être
-> vérifiée par un humain avant ajout.
+> **Important:** a mention in an article does not establish a person's role or
+> responsibility. Name detection is heuristic and may miss people or produce
+> false positives. A human must review each proposal before approval.
 
-## Code et documentation
+## Source and documentation
 
-- [Documentation complète, installation et vie privée](browser-extension/README.md)
-- [Code de l'extension](browser-extension/)
-- [Tests automatisés](browser-extension/tests/)
-- [Outil de génération des paquets Chrome et Firefox](browser-extension/tools/build.sh)
-- [Journal des modifications](CHANGELOG.md)
+- [Full documentation, installation, and privacy information](browser-extension/README.md)
+- [Extension source](browser-extension/)
+- [Automated tests](browser-extension/tests/)
+- [Chrome and Firefox package builder](browser-extension/tools/build.sh)
+- [Changelog](CHANGELOG.md)
 
-## Construire et tester
+## Build and test
 
-Prérequis : Node.js et l'utilitaire `zip`.
+Requirements: Node.js and the `zip` and `unzip` utilities.
 
-Depuis la racine du dépôt :
+From the repository root:
 
 ```sh
 node --test browser-extension/tests/*.test.js
 ./browser-extension/tools/build.sh
 ```
 
-Le script vérifie la syntaxe JavaScript et génère à la racine du dépôt les
-archives `shitlist_v2.3.2_chrome.zip` et `shitlist_v2.3.2_firefox.xpi`. Chaque
-archive contient aussi le fichier `LICENSE`, reçoit le manifeste adapté à son
-navigateur et inclut uniquement `browser-extension/data/names.json` s'il existe,
-comme liste initiale facultative. Les autres fichiers de `data/` ne sont pas
-embarqués. Les archives générées ne sont pas suivies par Git ; les versions
-distribuées sont jointes aux Releases.
+The build script checks JavaScript syntax and writes
+`shitlist_v2.3.3_chrome.zip` and `shitlist_v2.3.3_firefox.xpi` to the repository
+root. Each package includes `LICENSE`, uses a browser-specific manifest, and
+includes only the optional `browser-extension/data/names.json` seed when that
+file exists. Other files under `data/` are not packaged. Generated archives are
+ignored by Git; distributable packages are attached to GitHub Releases.
 
-## Données et confidentialité
+## Data and privacy
 
-Les personnes, propositions et décisions de revue sont stockées localement dans
-le navigateur. Les mots-clés sont transmis aux fournisseurs des flux consultés.
-Lorsqu'un nom est approuvé ou que la recherche de liens manquants est lancée, le
-nom complet est transmis à l'API Wikipédia pour rechercher une page de titre
-exact ; un homonyme reste possible et le lien doit être vérifié. Les pages
-consultées et les articles associés ne sont pas transmis à Wikipédia.
+People, proposals, and review decisions are stored locally in the browser.
+Keywords are sent to the providers of the selected feeds. When a name is
+approved, or when the user starts the missing-link lookup, the full name is sent
+to the Wikipedia API to find an exact page title. A namesake may exist, so the
+link must be checked. Browsed pages and associated articles are not sent to
+Wikipedia.
 
-## Licence
+The extension intentionally searches French-language news by default. French
+Google News language/region settings, French feeds, and French topic keywords
+are product data, not translations of the English-language interface.
 
-Le code source et les éléments originaux de ce dépôt sont distribués sous la
-licence [MIT](LICENSE). Le fichier `LICENSE` est également inclus dans les
-paquets Chrome et Firefox. Les composants tiers éventuels restent soumis aux
-avis de licence qui leur sont propres.
+## License
+
+The source code and original materials in this repository are distributed under
+the [MIT License](LICENSE). `LICENSE` is also included in Chrome and Firefox
+packages. Third-party components remain subject to their own license notices.

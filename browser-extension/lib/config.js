@@ -1,20 +1,20 @@
-// config.js — configuration par défaut de l'extension (thème, mots-clés,
-// période, filtrage, flux). Chargée en storage à la 1re activation ; ensuite
-// éditable depuis le panneau de contrôle (options). Portage de config.yaml.
+// config.js — extension defaults (topic, keywords, period, filters, and feeds).
+// Loaded into storage on first activation and then editable in the control
+// panel. Ported from config.yaml.
 //
-// Exposé en global PN_DEFAULT_CONFIG (service worker + pages d'options).
+// Exposed globally as PN_DEFAULT_CONFIG (service worker and options pages).
 (function (root) {
   "use strict";
 
   const PN_DEFAULT_CONFIG = {
-    // Thème : description libre + mots-clés (filtrage lexical des articles).
+    // Topic: free-text description and keywords for article filtering.
     description:
-      "viol, agression sexuelle, violence, violences sexuelles et conjugales",
+      "rape, sexual assault, sexual and domestic violence",
     keywords: [
-      // -- Viol --
+      // -- Rape --
       "viol", "viols", "viol conjugal", "viol collectif", "viole",
       "violée", "violées", "violés", "violeur", "violeurs",
-      // -- Agression sexuelle --
+      // -- Sexual assault --
       "agression sexuelle", "agressions sexuelles", "agresseur sexuel",
       "abus sexuel", "abus sexuels", "attouchements", "attouchement",
       "harcèlement sexuel", "harcèlement", "inceste", "pédophilie",
@@ -29,38 +29,38 @@
     ],
     minKeywords: 1,
 
-    // Période : ne retenir que les articles publiés depuis N mois.
+    // Period: keep only articles published within the last N months.
     months: 6,
 
-    // Filtrage anti faux-positifs.
-    // Tokens interdits : si UN mot du nom en fait partie, le nom est rejeté.
+    // False-positive filtering.
+    // Excluded tokens: reject a name if ANY part of it matches one.
     excludedWords: [
       "tumble", "shares", "alphabet", "hype", "taco", "options", "weigh",
-      // médias / journaux
+      // Media outlets and newspapers
       "libre", "midi", "ouest", "charente", "marianne", "aleteia", "anadolu",
       "ajansi", "parisien", "isere", "libere", "femme",
-      // fragments d'affaires / mots-clés du thème pris pour des noms
+      // Case fragments and topic keywords that may be mistaken for names
       "affaire", "lyhanna", "feminicide", "inceste",
     ],
-    // Noms complets à exclure explicitement.
+    // Full names to exclude explicitly.
     excludedNames: [
       "Taco Bell", "Common Cause", "Marie Claire", "Ouest-France",
       "Midi Libre", "Charente Libre", "Le Parisien", "Anadolu Ajansı",
       "Affaire Lyhanna",
     ],
 
-    // Flux RSS des médias. Des recherches Google News supplémentaires sont
-    // générées automatiquement par groupes à partir des mots-clés ci-dessus.
+    // Media RSS feeds. Additional Google News searches are generated
+    // automatically in groups from the keywords above.
     googleNewsSearch: true,
     googleNewsLanguage: "fr",
     googleNewsRegion: "FR",
     feeds: [
-      // Généralistes "à la Une"
+      // General news and headlines
       "https://www.lemonde.fr/rss/une.xml",
       "https://www.france24.com/fr/rss",
       "https://www.franceinfo.fr/titres.rss",
       "https://www.lefigaro.fr/rss/figaro_actualites.xml",
-      // Rubriques Justice / Faits divers
+      // Justice and crime sections
       "https://www.lemonde.fr/police-justice/rss_full.xml",
       "https://www.francetvinfo.fr/faits-divers.rss",
       "https://www.francetvinfo.fr/societe/justice.rss",

@@ -1,11 +1,11 @@
-// content.js — scanne le texte de la page, repère les personnes de la liste
-// presse et insère un 💩 qui ouvre un menu de liens vers les articles associés.
+// content.js — scans page text for people in the press-name list and adds a 💩
+// that opens a menu of links to their associated articles.
 (() => {
   "use strict";
 
-  // Garde-fou anti double-injection : sur certaines pages (SPA, bfcache) le
-  // script peut être évalué plusieurs fois. Sans ça, chaque instance a ses
-  // propres compteurs et ré-ajoute des 💩 → impression de boucle.
+  // Prevent duplicate injection: on some pages (SPA, bfcache), the script can
+  // be evaluated more than once. Each instance would otherwise keep separate
+  // counters and add 💩 markers repeatedly, appearing to loop.
   if (window.__pressNamePoopLoaded) return;
   window.__pressNamePoopLoaded = true;
 
@@ -14,11 +14,11 @@
   const POOP = "\uD83D\uDCA9"; // 💩
   const MIN_TERM_LEN = 3;
 
-  // Mots communs FR/EN + prénoms fréquents qui sont aussi des patronymes :
-  // on n'accepte JAMAIS le patronyme seul pour ces cas (il faut prénom + nom),
-  // sinon un mot/prénom courant déclenche un 💩 partout dans le texte.
+  // Common French/English words and frequent first names that are also
+  // surnames: never accept the surname alone in these cases. Require a full
+  // first-name/surname match to avoid marking common words across the page.
   const COMMON_WORDS = new Set([
-    // mots communs
+    // Common words
     "page", "cause", "mars", "roman", "blanc", "franc", "fort", "chef",
     "mode", "part", "rose", "lys", "pré", "bois", "champ",
     "roy", "leroy", "bon", "bonne", "vert", "noir", "petit", "grand",
@@ -26,35 +26,34 @@
     "lion", "loup", "chat", "coq", "faure", "cher", "fils", "more",
     "good", "long", "young", "brown", "white", "cook", "bell", "case",
     "berry", "caire", "marie", "désirée", "desiree",
-    // prénoms fréquents (évite le patronyme seul homographe d'un prénom)
+    // Frequent first names that are also spelled like a surname
     "pierre", "baptiste", "jean", "paul", "louis", "julien", "julie",
     "laurent", "martin", "bernard", "claude", "michel", "simon",
     "thomas", "vincent", "antoine", "françois", "francois", "denis",
     "victor", "hugo", "noel", "noël", "grégoire", "gregoire",
   ]);
 
-  // Stocke les URLs par index pour éviter des attributs DOM énormes.
+  // Store URLs by index to avoid oversized DOM attributes.
   const MATCH_STORE = [];
 
-  // NB : on marque TOUTES les occurrences d'un nom sur la page (une par
-  // occurrence). L'idempotence est garantie par un contrôle DOM (voir plus
-  // bas) : après insertion, un nom matché se retrouve toujours en fin de nœud
-  // texte, immédiatement suivi de NOTRE 💩 → on saute alors le re-marquage.
-  // Cela rend les re-scans complets (contenu chargé tardivement) sans danger.
+  // Mark every occurrence of a name on the page. Idempotence is enforced by
+  // checking the DOM below: after insertion, a matched name at the end of a
+  // text node is immediately followed by OUR 💩 marker, so it is not marked
+  // again. This makes full rescans safe when content loads late.
 
-  // Balises dont on ne scanne jamais le contenu.
+  // Tags whose contents are never scanned.
   const SKIP_TAGS = new Set([
     "SCRIPT", "STYLE", "NOSCRIPT", "TEXTAREA", "INPUT", "SELECT",
     "OPTION", "CODE", "PRE", "KBD", "SAMP", "TITLE",
   ]);
 
-  let observer = null; // référence pour disconnect/reconnect
+  let observer = null; // retained for disconnect/reconnect
 
   function escapeRegExp(s) {
     return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
-  // Vrai si le nœud est un élément 💩 inséré par l'extension.
+  // True when the node is a 💩 element inserted by the extension.
   function isOurPoop(node) {
     return node && node.nodeType === 1 && node.classList &&
       node.classList.contains("press-name-poop");
@@ -79,8 +78,8 @@
       byUrl.set(url, { ...prior, ...article, url });
     };
     if (isSafeUrl(person.wikipediaUrl)) add({
-      title: "Page Wikipédia — " + [person.prenom, person.nom].filter(Boolean).join(" "),
-      source: "Wikipédia",
+      title: "Wikipedia page — " + [person.firstName, person.lastName].filter(Boolean).join(" "),
+      source: "Wikipedia",
       url: person.wikipediaUrl,
     });
     (Array.isArray(person.articles) ? person.articles : []).forEach(add);
@@ -88,13 +87,13 @@
     return Array.from(byUrl.values()).sort((a, b) => Number(isWikipediaUrl(b.url)) - Number(isWikipediaUrl(a.url)));
   }
 
-  // Construit, à partir des personnes, une table terme -> {label, articles}.
+  // Build a term -> {label, articles} map from the people list.
   function buildTermMap(people) {
-    const map = new Map(); // termLower -> {display, articles:Map, solo}
+    const map = new Map(); // lowercase term -> {display, articles:Map, solo}
     const add = (term, label, articles, solo) => {
-      const t = term.trim();
-      if (t.length < MIN_TERM_LEN) return;
-      const key = t.toLowerCase();
+      const trimmedTerm = term.trim();
+      if (trimmedTerm.length < MIN_TERM_LEN) return;
+      const key = trimmedTerm.toLowerCase();
       let e = map.get(key);
       if (!e) { e = { display: label, articles: new Map(), solo: !!solo }; map.set(key, e); }
       if (!solo) e.solo = false;
@@ -104,16 +103,16 @@
       });
     };
     for (const p of people) {
-      const nom = (p.nom || "").trim();
-      const prenom = (p.prenom || "").trim();
-      const label = (prenom ? prenom + " " : "") + nom;
+      const surname = (p.lastName || "").trim();
+      const firstName = (p.firstName || "").trim();
+      const label = (firstName ? firstName + " " : "") + surname;
       const articles = personEvidence(p);
-      if (nom && prenom) {
-        add(prenom + " " + nom, label, articles, false);
-        add(nom + " " + prenom, label, articles, false);
+      if (surname && firstName) {
+        add(firstName + " " + surname, label, articles, false);
+        add(surname + " " + firstName, label, articles, false);
       }
-      if (nom && !COMMON_WORDS.has(nom.toLowerCase())) {
-        add(nom, label, articles, true);
+      if (surname && !COMMON_WORDS.has(surname.toLowerCase())) {
+        add(surname, label, articles, true);
       }
     }
     return map;
@@ -139,7 +138,7 @@
     span.dataset.idx = String(idx);
     span.dataset.personName = label;
     const n = articles.length;
-    span.dataset.tooltip = `${label} — ${n} article${n > 1 ? "s" : ""} (cliquer pour choisir)`;
+    span.dataset.tooltip = `${label} — ${n} article${n > 1 ? "s" : ""} (click to choose)`;
     span.title = span.dataset.tooltip;
     return span;
   }
@@ -154,10 +153,17 @@
     activeTrigger = null;
   }
 
+  // Translate only legacy Wikipedia labels saved by older extension versions.
+  function englishWikipediaLabel(value) {
+    return String(value || "")
+      .replace(/^Page Wikipédia(?=$|\s*[—(])/, "Wikipedia page")
+      .replace(/^Wikipédia(?=$|\s*[—(])/, "Wikipedia");
+  }
+
   function articleLabel(article) {
-    if (article.title) return article.title;
-    if (isWikipediaUrl(article.url)) return "Page Wikipédia";
-    if (article.source) return article.source;
+    if (article.title) return englishWikipediaLabel(article.title);
+    if (isWikipediaUrl(article.url)) return "Wikipedia page";
+    if (article.source) return englishWikipediaLabel(article.source);
     try { return new URL(article.url).hostname.replace(/^www\./i, ""); }
     catch (e) { return article.url; }
   }
@@ -172,10 +178,10 @@
     const menu = document.createElement("div");
     menu.className = "press-name-link-menu";
     menu.setAttribute("role", "menu");
-    menu.setAttribute("aria-label", "Articles associés à cette personne");
+    menu.setAttribute("aria-label", "Articles associated with this person");
     const heading = document.createElement("div");
     heading.className = "press-name-link-menu-title";
-    heading.textContent = "Articles associés à " + (span.dataset.personName || "cette personne");
+    heading.textContent = "Articles associated with " + (span.dataset.personName || "this person");
     menu.appendChild(heading);
     for (const article of articles) {
       if (!article || !isSafeUrl(article.url)) continue;
@@ -233,13 +239,13 @@
   document.addEventListener("scroll", closeMenu, true);
   window.addEventListener("resize", closeMenu);
 
-  // Traite un nœud texte : renvoie true si une modification a été faite.
+  // Process a text node and return true if it was modified.
   function processTextNode(node, regex, termMap) {
-    // Ne jamais traiter un nœud qui est déjà à l'intérieur d'un 💩.
+    // Never process a node already inside a 💩 marker.
     if (node.parentNode && isOurPoop(node.parentNode)) return false;
     const text = node.nodeValue;
     if (!text || text.length < MIN_TERM_LEN) return false;
-    // Si le texte n'a aucune lettre, rien à faire (évite du travail inutile).
+    // Skip text with no letters to avoid unnecessary work.
     if (!/[\p{L}]/u.test(text)) return false;
 
     regex.lastIndex = 0;
@@ -248,13 +254,13 @@
     while ((m = regex.exec(text)) !== null) {
       const matchText = m[1];
       const entry = termMap.get(matchText.toLowerCase());
-      if (m.index === regex.lastIndex) regex.lastIndex++; // anti-boucle regex
+      if (m.index === regex.lastIndex) regex.lastIndex++; // prevent a zero-width regex loop
       if (!entry) continue;
-      // Patronyme seul : uniquement si capitalisé (nom propre).
+      // A surname by itself is accepted only when capitalized as a proper name.
       if (entry.solo && !/^[\p{Lu}]/u.test(matchText)) continue;
       const end = m.index + matchText.length;
-      // Idempotence : si ce nom se termine à la fin du nœud et qu'il est déjà
-      // suivi de NOTRE 💩, ne pas en rajouter (cas d'un re-scan du même texte).
+      // Idempotence: when a name ends this node and is already followed by
+      // OUR 💩 marker, do not add another one during a rescan.
       if (end === text.length && isOurPoop(node.nextSibling)) continue;
       found = true;
       frag.appendChild(document.createTextNode(text.slice(last, end)));
@@ -278,7 +284,7 @@
     const shadowRoots = [];
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT | NodeFilter.SHOW_ELEMENT, {
       acceptNode(node) {
-        // Élément : sert uniquement à repérer les shadow roots ouverts à explorer.
+        // Elements are used only to find open shadow roots to scan.
         if (node.nodeType === 1) {
           if (node.classList && node.classList.contains("press-name-link-menu")) return NodeFilter.FILTER_REJECT;
           if (node.shadowRoot) shadowRoots.push(node.shadowRoot);
@@ -295,18 +301,17 @@
     });
     let n;
     while ((n = walker.nextNode())) nodes.push(n);
-    // Descend récursivement dans les shadow DOM ouverts (web components).
+    // Recursively visit open shadow DOM roots (web components).
     for (const sr of shadowRoots) {
       try { nodes.push(...collectTextNodes(sr)); } catch (e) { /* noop */ }
     }
     return nodes;
   }
 
-  // Applique le traitement à une liste de nœuds. TOUTES les écritures DOM
-  // se font observer DÉCONNECTÉ, puis on jette les mutations qu'on a nous-mêmes
-  // générées (takeRecords) avant de reconnecter → l'observer ne se déclenche
-  // jamais sur ses propres insertions, quelle que soit la façon dont le
-  // navigateur fusionne/normalise les nœuds texte.
+  // Process a list of nodes. Disconnect the observer for ALL DOM writes, then
+  // discard our own queued mutations with takeRecords before reconnecting. The
+  // observer therefore never reacts to its own insertions, regardless of how
+  // the browser merges or normalizes text nodes.
   function processNodes(textNodes, regex, termMap) {
     if (!textNodes.length) return;
     if (observer) observer.disconnect();
@@ -316,7 +321,7 @@
       }
     } finally {
       if (observer) {
-        observer.takeRecords();               // jette nos propres mutations
+        observer.takeRecords();               // discard our own mutations
         observer.observe(document.body, { childList: true, characterData: true, subtree: true });
       }
     }
@@ -329,19 +334,34 @@
   }
 
   async function loadPeople() {
-    // Seule source : le stockage de l'extension, alimenté par la collecte du
-    // service worker (démarrage / « Rafraîchir »). Le content script ne récupère
-    // aucune ressource packagée, ce qui évite d'exposer un fichier détectable
-    // aux pages web (pas de web_accessible_resources).
+    // The extension storage, populated by service-worker collection (startup
+    // or manual refresh), is the only source. The content script does not fetch
+    // packaged resources, so it does not expose a detectable file to web pages
+    // through web_accessible_resources.
     try {
       const d = await storageGet("pn_people");
-      if (Array.isArray(d.pn_people)) return d.pn_people;
+      if (Array.isArray(d.pn_people)) return d.pn_people.map((person) => {
+        if (!person || typeof person !== "object") return person;
+        const canonical = { ...person };
+        // The content script can run before background startup migration writes
+        // storage, so accept legacy fields only at this raw-storage boundary.
+        if (!Object.prototype.hasOwnProperty.call(canonical, "firstName") &&
+            Object.prototype.hasOwnProperty.call(canonical, "prenom")) canonical.firstName = canonical.prenom;
+        if (!Object.prototype.hasOwnProperty.call(canonical, "lastName") &&
+            Object.prototype.hasOwnProperty.call(canonical, "nom")) canonical.lastName = canonical.nom;
+        if (!Object.prototype.hasOwnProperty.call(canonical, "articleCount") &&
+            Object.prototype.hasOwnProperty.call(canonical, "nb_articles")) canonical.articleCount = canonical.nb_articles;
+        delete canonical.prenom;
+        delete canonical.nom;
+        delete canonical.nb_articles;
+        return canonical;
+      });
     } catch (e) { /* noop */ }
     return [];
   }
 
   async function main() {
-    // Respecte l'activation (panneau de contrôle).
+    // Respect the enabled setting from the control panel.
     try {
       const st = await storageGet("pn_enabled");
       if (st.pn_enabled === false) return;
@@ -353,15 +373,14 @@
     const regex = buildRegex(termMap);
     if (!regex) return;
 
-    // Passage initial : observer encore null → processNodes ne tente aucun
-    // disconnect/observe (pas de placeholder qui resterait attaché à vide).
+    // Initial pass: observer is still null, so processNodes does not call
+    // disconnect/observe or leave an empty placeholder observer attached.
     processNodes(collectTextNodes(document.body), regex, termMap);
 
-    // Re-scans complets différés : certains sites (Le Monde, Google News…)
-    // hydratent / injectent le contenu de l'article après le 1er passage et
-    // parfois sans mutation détectée proprement. Comme le marquage est
-    // idempotent (cf. contrôle DOM), on peut relancer un scan complet sans
-    // risque de doublon ni de boucle.
+    // Delayed full rescans: some sites (for example, Le Monde and Google News)
+    // hydrate or inject article content after the initial pass, sometimes
+    // without a reliably detected mutation. DOM idempotence makes full rescans
+    // safe without duplicate markers or loops.
     for (const delay of [800, 2000, 4000]) {
       setTimeout(() => {
         try { processNodes(collectTextNodes(document.body), regex, termMap); }
@@ -369,9 +388,9 @@
       }, delay);
     }
 
-    // Contenu dynamique : on collecte les nœuds texte des sous-arbres ajoutés
-    // et ceux dont le contenu change sur place, puis on les traite en lot
-    // (observer déconnecté pendant l'écriture).
+    // Dynamic content: collect text nodes from added subtrees and nodes whose
+    // contents change in place, then process them in a batch (with the observer
+    // disconnected during writes).
     let pending = false;
     const pendingRoots = [];
     observer = new MutationObserver((muts) => {
@@ -381,16 +400,16 @@
           const parent = node && node.parentNode;
           if (node && node.nodeType === 3 && parent && !SKIP_TAGS.has(parent.nodeName) &&
               !isOurPoop(parent) && !parent.isContentEditable) {
-            // Ce nœud a peut-être été modifié après son marquage. Retirer le
-            // marqueur adjacent avant le rescannage évite un doublon ou une
-            // marque périmée si le nom a disparu.
+            // This node may have changed after it was marked. Remove the
+            // adjacent marker before rescanning to avoid a duplicate or a stale
+            // marker if the name was removed.
             if (isOurPoop(node.nextSibling)) parent.removeChild(node.nextSibling);
             pendingRoots.push(node);
           }
           continue;
         }
         for (const node of mut.addedNodes) {
-          if (isOurPoop(node)) continue;            // notre propre 💩
+          if (isOurPoop(node)) continue;            // our own 💩 marker
           if (node.nodeType === 1 && node.classList && node.classList.contains("press-name-link-menu")) continue;
           if (node.nodeType === 1 || node.nodeType === 3) pendingRoots.push(node);
         }

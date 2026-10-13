@@ -1,290 +1,292 @@
 # Shitlist 💩
 
-Une extension pour **Chrome** et **Firefox** qui collecte des articles de presse
-sur des thématiques configurées (par défaut : violences sexuelles et
-conjugales), puis propose les noms détectés pour une **revue humaine**. Un nom
-n'entre dans la liste active qu'après validation explicite par l'utilisateur.
-Les noms qui y figuraient déjà avant cette version sont conservés tels quels :
-leur origine (ajout manuel ou ancienne collecte) ne peut pas être distinguée avec
-fiabilité. Les nouveaux noms validés peuvent ensuite être repérés sur les pages consultées ; un clic
-sur le 💩 affiche un menu où chaque article peut être ouvert individuellement.
+A **Chrome** and **Firefox** extension that collects news articles about
+configured topics (sexual and domestic violence by default), then presents
+names it detects for **human review**. A name enters the active list only after
+the user explicitly approves it. Names already present before this version are
+preserved as-is: their origin (manual entry or an earlier collection) cannot be
+reliably determined. Newly approved names can then be detected on visited pages;
+clicking the 💩 opens a menu where each article can be opened individually.
 
-La collecte s'effectue dans le navigateur, sans serveur ni tâche planifiée.
-Chaque proposition conserve le titre, le lien et le contexte disponible de
-l'article afin que l'utilisateur puisse vérifier pourquoi le nom a été repéré.
-
----
-
-## 1. En bref : que fait l'extension ?
-
-- **Elle collecte et propose, sans ajout automatique.** Au démarrage ou sur
-  demande, elle lit les flux configurés et les recherches Google Actualités
-  générées depuis les mots-clés. Les nouveaux noms restent en attente.
-- **Vous vérifiez chaque proposition.** Le panneau présente le nom et les
-  articles justificatifs ; vous pouvez l'ajouter à la liste active ou la
-  refuser. Un refus est mémorisé, mais un article daté plus récent qui mentionne
-  de nouveau le nom déclenche une nouvelle proposition ; il reste aussi possible
-  de rouvrir manuellement un refus.
-- **Elle marque les noms de la liste active.** Chaque fois qu'un nom de la
-  liste active apparaît sur une page, elle ajoute un **💩** à droite du nom. Les
-  nouvelles détections doivent d'abord être validées.
-- **Le 💩 ouvre un menu.** Les liens des articles associés sont affichés et
-  chaque lien s'ouvre individuellement dans un nouvel onglet.
-- **Vous gardez le contrôle.** La liste active, les propositions, le thème, les
-  mots-clés et les sources sont stockés localement dans le navigateur.
+Collection runs in the browser, with no server or scheduled job. Each proposal
+keeps the available article title, link, and context so the user can check why a
+name was detected.
 
 ---
 
-## 2. Installer l'extension
+## 1. What the extension does
 
-> L'extension n'est pas (encore) publiée sur les magasins officiels. Des
-> paquets distincts sont générés car Chrome et Firefox n'utilisent pas la même
-> déclaration de tâche d'arrière-plan en Manifest V3 :
-> `shitlist_v2.3.2_chrome.zip` pour Chrome et `shitlist_v2.3.2_firefox.xpi`
-> pour Firefox.
-
-### Sur Chrome, Edge ou Brave
-
-1. Décompressez **`shitlist_v2.3.2_chrome.zip`** dans un dossier permanent.
-2. Ouvrez `chrome://extensions` (sur Edge : `edge://extensions`) et activez
-   **« Mode développeur »**.
-3. Cliquez sur **« Charger l'extension non empaquetée »** et choisissez le
-   dossier décompressé contenant `manifest.json`.
-4. L'icône 💩 apparaît dans la barre d'outils.
-
-La variante Chrome utilise `background.service_worker`, sans la clé
-`background.scripts` qui provoquait l'erreur de manifeste.
-
-### Sur Firefox (version 140 ou plus récente)
-
-1. Ouvrez `about:debugging#/runtime/this-firefox`.
-2. Cliquez sur **« Charger un module temporaire… »**.
-3. Sélectionnez **`shitlist_v2.3.2_firefox.xpi`**.
-4. L'icône 💩 apparaît dans la barre d'outils.
-
-> ⚠️ Le chargement depuis `about:debugging` est temporaire : Firefox oublie le
-> module à chaque fermeture. Pour une installation permanente, l'extension
-> doit être signée par Mozilla (voir « Aller plus loin »).
-
-La variante Firefox utilise `background.scripts`, compatible avec le modèle
-Manifest V3 de Firefox. Ne chargez pas l'archive Chrome dans Firefox.
+- **It collects and proposes; it never auto-approves.** On startup or on demand,
+  it reads configured feeds and Google News searches generated from the
+  keywords. Newly detected names remain pending review.
+- **You review every proposal.** The review panel shows the name and supporting
+  articles. You can add the name to the active list or reject it. A rejection
+  is remembered, but a newer dated article mentioning the name can trigger a
+  new proposal. Rejected names can also be reopened manually.
+- **It marks names in the active list.** When a name from the active list
+  appears on a page, the extension adds a **💩** after it. New detections are not
+  marked until approved.
+- **The 💩 opens an article menu.** Links to associated articles are shown and
+  each link opens individually in a new tab.
+- **You stay in control.** The active list, proposals, topic, keywords, and
+  sources are stored locally in the browser.
 
 ---
 
-## 3. Utiliser l'extension au quotidien
+## 2. Install the extension
 
-### Le bouton 💩 (la popup)
+> The extension is not currently listed in the official extension stores.
+> Separate packages are built because Chrome and Firefox use different
+> Manifest V3 background declarations:
+> `shitlist_v2.3.3_chrome.zip` for Chrome and
+> `shitlist_v2.3.3_firefox.xpi` for Firefox.
 
-Cliquez sur l'icône 💩 dans la barre d'outils pour ouvrir un petit menu qui
-permet de :
+### Chrome, Edge, or Brave
 
-- **activer / désactiver** l'extension,
-- voir **combien de noms validés** et de propositions restent à examiner,
-- lancer une collecte immédiate avec **« Rafraîchir maintenant »**,
-- ouvrir directement la revue si des propositions sont en attente.
+1. Extract **`shitlist_v2.3.3_chrome.zip`** to a permanent folder.
+2. Open `chrome://extensions` (or `edge://extensions` in Edge) and enable
+   **Developer mode**.
+3. Click **Load unpacked** and select the extracted folder containing
+   `manifest.json`.
+4. The 💩 icon appears in the toolbar.
 
-### Repérer les noms sur une page
+The Chrome package uses `background.service_worker` and omits the
+`background.scripts` key that caused a manifest error.
 
-Quand l'extension est activée, ouvrez ou rechargez une page : un **💩** apparaît
-à côté des noms validés qui y figurent. Les nouvelles détections ne sont pas
-marquées avant votre validation.
+### Firefox (version 140 or later)
 
-### Choisir un article depuis la page
+1. Open `about:debugging#/runtime/this-firefox`.
+2. Click **Load Temporary Add-on…**.
+3. Select **`shitlist_v2.3.3_firefox.xpi`**.
+4. The 💩 icon appears in the toolbar.
 
-**Cliquez sur un 💩** : un menu contextuel affiche les liens disponibles pour
-cette personne. Cliquez sur un lien pour ouvrir uniquement cet article dans un
-nouvel onglet ; les autres ne s'ouvrent pas. Si un lien Wikipédia est enregistré,
-il apparaît en premier.
+> ⚠️ Loading from `about:debugging` is temporary: Firefox removes the add-on
+> when it closes. For a permanent installation, Mozilla must sign the extension
+> (see [Further setup](#8-further-setup)).
 
-> 💡 Après avoir validé un nom dans la revue, **rechargez l'onglet** pour
-> que ce nom soit pris en compte sur la page affichée.
-
----
-
-## 4. Régler l'extension (panneau de réglages)
-
-Depuis la popup, ouvrez le panneau de contrôle. Il comporte 5 onglets :
-
-| Onglet | Ce que vous pouvez y faire |
-|--------|-----------------------------|
-| **Noms** | Voir, modifier, ajouter ou supprimer les personnes de la liste active. Chaque article est un lien cliquable ; les URL restent modifiables sous « Modifier les liens ». |
-| **Revue des noms** | Examiner le nom et les articles proposés, puis ajouter ou refuser chaque proposition. |
-| **Thématiques & mots-clés** | Changer le thème suivi et les mots-clés qui définissent ce thème. |
-| **Mots & noms exclus** | Empêcher certains mots ou noms d'être proposés par erreur (par ex. un nom de journal). |
-| **Flux & période** | Choisir les flux RSS, les recherches Google Actualités, la langue, le pays et la période. |
-
-Un refus est mémorisé afin d'éviter de reproposer le même nom à chaque collecte.
-Si un article portant une date de publication plus récente que les articles de la
-proposition refusée mentionne de nouveau ce nom, une nouvelle proposition est
-créée automatiquement. Les refus peuvent aussi être rouverts manuellement depuis
-la liste des propositions refusées.
-
-Dans l'onglet **Noms**, « Compléter les liens Wikipédia manquants » lance une
-recherche pour les personnes déjà présentes. À l'approbation d'une proposition,
-une recherche de titre exact est également tentée. Si une page correspondante
-existe, son lien est placé en tête de la liste ; vérifiez qu'il s'agit bien de la
-bonne personne avant de vous y fier.
-
-Chaque modification est enregistrée dans le navigateur et prise en compte à la
-collecte suivante.
+The Firefox package uses `background.scripts`, compatible with Firefox's
+Manifest V3 implementation. Do not load the Chrome package in Firefox.
 
 ---
 
-## 5. Comment ça marche (pour les curieux)
+## 3. Everyday use
 
-L'extension refait, en JavaScript et directement dans le navigateur, ce que
-faisait auparavant un programme Python séparé :
+### The 💩 button (popup)
 
-1. **Recherche d'articles** — flux RSS configurés et recherches Google
-   Actualités générées à partir des mots-clés. Les termes sont regroupés en
-   requêtes OR de taille limitée ; jusqu'à quatre flux sont lus en parallèle.
-2. **Filtrage** — on conserve les articles correspondant au **thème** et à la
-   **période** choisie.
-3. **Détection indicative** — l'extension repère des séquences « Prénom Nom »
-   dans le titre et le résumé à l'aide d'un dictionnaire de prénoms et de filtres
-   heuristiques. Cette détection peut manquer des noms ou se tromper.
-4. **Preuve consultable** — chaque proposition montre le nom, le titre, le lien,
-   la source, la date et le résumé disponible. Les liens Google Actualités sont
-   convertis vers l'adresse de l'article quand c'est possible. Les liens Wikipédia
-   trouvés sont conservés en tête de la liste des liens validés.
-5. **Revue humaine** — l'utilisateur ajoute le nom à la liste active ou refuse
-   la proposition. Les refus sont mémorisés ; une mention dans un article dont
-   la date de publication est plus récente déclenche une nouvelle proposition.
-   Les refus peuvent également être rouverts depuis le panneau.
+Click the 💩 toolbar icon to open a small menu where you can:
 
-Les données de la liste, des propositions et des décisions sont conservées
-**localement dans le navigateur**. Les requêtes de recherche et les flux sont
-adressés à leurs fournisseurs (notamment Google Actualités si cette option est
-activée). À l'approbation d'un nom — ou lorsque l'utilisateur lance le bouton
-d'enrichissement — son nom complet est transmis à l'API Wikipédia française,
-puis anglaise si aucune page exacte n'est trouvée, afin de vérifier un titre de
-page ; ni les articles associés, ni les thèmes suivis, ni les pages consultées ne
-sont envoyés à Wikipédia. Une page au même titre peut concerner un homonyme :
-ce lien est une référence à vérifier, pas une validation de l'identité. À la
-première installation, la liste active reste vide jusqu'à validation explicite
-d'un nom, sauf si le paquet contient le seed facultatif `data/names.json`, dont
-les personnes servent alors de liste initiale. Lors d'une mise à jour depuis une
-ancienne version, les noms déjà présents sont conservés : leur origine ne peut
-pas être déterminée sûrement.
+- **enable or disable** the extension;
+- see the number of **approved names** and proposals awaiting review;
+- start an immediate collection with **Refresh now**;
+- open the review panel directly when proposals are pending.
+
+### Find names on a page
+
+When the extension is enabled, open or reload a page. A **💩** appears next to
+approved names found on that page. Newly detected names are not marked until
+you approve them.
+
+### Choose an article from a page
+
+**Click a 💩** to show a menu of available links for that person. Click a link to
+open only that article in a new tab; the other links stay closed. If a Wikipedia
+link is saved, it appears first.
+
+> 💡 After approving a name in the review panel, **reload the tab** for the name
+to be recognized on the currently displayed page.
 
 ---
 
-## 6. Les fichiers de l'extension
+## 4. Configure the extension
 
-> Voici l'organisation du dossier source. L'outil `tools/build.sh` produit les
-> paquets Chrome et Firefox, chacun avec un manifeste adapté à son navigateur.
+Open the control panel from the popup. It has five tabs:
+
+| Tab | What you can do |
+|-----|-----------------|
+| **Names** | View, edit, add, or remove people from the active list. Each article is a clickable link; URLs can be edited under **Edit links**. |
+| **Name review** | Review each proposed name and its supporting articles, then approve or reject it. |
+| **Topics & keywords** | Change the monitored topic and the keywords used to define it. |
+| **Excluded words & names** | Prevent certain words or names (for example, a newspaper name) from being proposed by mistake. |
+| **Feeds & period** | Choose RSS feeds, Google News searches, language, country, and the publication period. |
+
+A rejection is remembered to prevent the same name from being proposed on every
+collection. If an article with a publication date later than the rejected
+proposal's articles mentions the name again, a new proposal is created
+automatically. Rejected proposals can also be reopened manually.
+
+In the **Names** tab, **Find missing Wikipedia links** searches for people
+already on the list. An exact-title lookup is also attempted when a proposal is
+approved. If a matching page exists, its link is placed first; check that it
+refers to the right person before relying on it.
+
+Each change is saved in the browser and used by the next collection.
+
+---
+
+## 5. How it works
+
+The extension performs these steps in JavaScript directly in the browser:
+
+1. **Find articles** — read configured RSS feeds and Google News searches
+   generated from the keywords. Terms are grouped into bounded OR queries, and
+   up to four feeds are read concurrently.
+2. **Filter results** — keep articles matching the configured **topic** and
+   **publication period**.
+3. **Detect possible names** — identify “First Last” sequences in article
+   titles and summaries using a first-name dictionary and heuristic filters.
+   This may miss names or produce false positives.
+4. **Keep review evidence** — show each proposal's name, title, link, source,
+   date, and available summary. Google News links are resolved to the article
+   URL when possible. Wikipedia links found for approved people are kept first
+   in their list of links.
+5. **Require human review** — the user approves or rejects each proposed name.
+   Rejections are remembered; a later-published article mentioning the person
+   can trigger a new proposal. Rejected proposals can also be reopened in the
+   panel.
+
+Names, proposals, and review decisions are stored **locally in the browser**.
+Search queries and feed requests go to their respective providers (including
+Google News when enabled). When a person is approved—or the user explicitly
+starts the link-enrichment action—the person's full name is sent to the French
+Wikipedia API first, then the English API if no exact page is found. Associated
+articles, monitored topics, and visited pages are not sent to Wikipedia. A page
+with the same title may refer to a namesake: the link is a reference to verify,
+not proof of identity.
+
+On first installation, the active list remains empty until a name is explicitly
+approved, unless the package contains the optional `data/names.json` seed, whose
+people are used as the initial list. On upgrade, existing names are preserved;
+their origin cannot be determined reliably.
+
+### Legacy stored-data compatibility
+
+On startup, the extension automatically migrates saved people, pending
+proposals, and rejected proposals from the legacy properties `prenom`, `nom`,
+and `nb_articles` to the canonical `firstName`, `lastName`, and `articleCount`
+fields. Optional seed records are normalized the same way before being added to
+storage. The migration preserves other metadata and article evidence, keeps
+existing storage keys unchanged, and runs even when the one-time
+`pn_seeded` flag is already set. The content script also accepts legacy
+person fields briefly if it reads storage before the background migration
+finishes. The exact built-in topic description from earlier versions is shown
+in English when loaded; custom descriptions and the French search keywords and
+feed settings are preserved.
+
+---
+
+## 6. Extension files
+
+`tools/build.sh` creates Chrome and Firefox packages with browser-specific
+manifests.
 
 ```
-(dossier de l'extension)/
-├── manifest.json      → manifeste source Chrome (la tâche de fond est un service worker)
-├── tools/build.sh     → génère les paquets Chrome et Firefox avec leurs manifestes adaptés
-├── background.js      → lance la collecte et gère les messages de l'extension
-├── content.js         → repère les noms sur la page et ajoute les 💩
-├── styles.css         → apparence du 💩 et de son menu contextuel
-├── popup.html         → le petit menu du bouton 💩
-├── popup.js           → logique de ce menu
-├── options.html       → le panneau de contrôle et de revue (5 onglets)
-├── options.js         → logique du panneau de contrôle et de revue
-├── options.css        → apparence du panneau de réglages
-├── demo.html          → page d'exemple pour tester l'extension
+(extension folder)/
+├── manifest.json      → source manifest for Chrome (background service worker)
+├── tools/build.sh     → builds Chrome and Firefox packages
+├── background.js      → starts collection and handles extension messages
+├── content.js         → detects names on pages and adds 💩 markers
+├── styles.css         → 💩 marker and article-menu styles
+├── popup.html         → toolbar popup markup
+├── popup.js           → popup behavior
+├── options.html       → control and review panel markup (five tabs)
+├── options.js         → control and review panel behavior
+├── options.css        → control panel styles
+├── demo.html          → example page for testing the extension
 ├── lib/
-│   ├── config.js      → réglages par défaut (thème, mots-clés, flux…)
-│   ├── firstnames.js  → dictionnaire de prénoms (repérage des noms)
-│   ├── rss.js         → lecture des flux RSS/Atom
-│   ├── gnews.js       → conversion des liens Google News
-│   ├── collector.js   → collecte, filtres, recherches dynamiques et propositions
-│   └── store.js       → sauvegarde locale (liste, propositions et refus)
+│   ├── config.js      → default topic, keywords, feeds, and settings
+│   ├── firstnames.js  → first-name dictionary for name detection
+│   ├── rss.js         → RSS/Atom feed reader
+│   ├── gnews.js       → Google News link resolver
+│   ├── collector.js   → collection, filters, searches, and proposals
+│   └── store.js       → local storage for people, proposals, and rejections
 └── icons/
-    ├── icon48.png     → icône (barre d'outils)
-    └── icon128.png    → icône (page des extensions)
+    ├── icon48.png     → toolbar icon
+    └── icon128.png    → extensions page icon
 ```
 
-> Pour **tester rapidement**, ouvrez le fichier `demo.html` dans votre
-> navigateur une fois l'extension installée : il contient des noms d'exemple
-> qui devraient recevoir un 💩.
+To test quickly, open `demo.html` in a browser after installing the extension.
+It contains example names that should receive a 💩 when they are in the active
+list.
 
 ---
 
-## 7. Sécurité et vie privée
+## 7. Security and privacy
 
-L'extension est conçue pour être la plus discrète et la plus sûre possible :
+The extension is designed to be discreet and safe:
 
-- **Permissions nécessaires.** Les données restent stockées localement dans le
-  navigateur. L'extension demande toutefois l'accès aux pages web (`<all_urls>`)
-  pour repérer les noms et lire les flux RSS configurés ; elle ne demande aucun
-  accès aux fichiers, à l'historique ou aux mots de passe.
-- **Pages consultées non transmises.** Le contenu des pages où un nom est repéré
-  est traité localement et n'est pas envoyé. Les mots-clés sont transmis aux
-  fournisseurs des flux utilisés. Le nom complet d'une personne approuvée est
-  envoyé à l'API Wikipédia uniquement lors de son approbation ou si l'utilisateur
-  lance explicitement la recherche de liens manquants ; aucun article ou thème
-  n'est envoyé à Wikipédia. Le manifeste Firefox déclare ces transmissions comme
-informations permettant d'identifier une personne et comme termes de recherche.
-- **Pas de code caché.** Tout le code est contenu dans l'extension ; rien n'est
-  téléchargé ni exécuté depuis l'extérieur.
-- **Ajout des 💩 sans risque.** Les 💩 sont insérés proprement (sans manipuler
-  le code des pages de façon dangereuse).
-- **Liens contrôlés.** Seuls les liens `http` et `https` sont affichés comme
-  liens ouvrables ; un nouvel onglet ne s'ouvre que lorsque l'utilisateur clique
-  individuellement sur un article.
+- **Required permissions.** Data stays in local browser storage. The extension
+  requests access to web pages (`<all_urls>`) to detect names and read configured
+  RSS feeds; it does not request access to files, browsing history, or
+  passwords.
+- **Visited pages are not transmitted.** Page content is processed locally.
+  Keywords are sent to feed providers. A person's full name is sent to the
+  Wikipedia API only when that person is approved or when the user explicitly
+  starts the missing-link lookup; articles and topics are not sent to
+  Wikipedia. The Firefox manifest declares these transmissions as personally
+  identifying information and search terms.
+- **No hidden code.** All code is packaged with the extension; nothing is
+  downloaded or executed from an external source.
+- **Safe markers.** 💩 markers are inserted without rewriting page HTML.
+- **Controlled links.** Only `http` and `https` links are shown as openable
+  links. A new tab opens only when the user clicks an individual article.
 
-L'extension a besoin de pouvoir agir sur **toutes les pages** (`<all_urls>`)
-pour deux raisons légitimes : marquer les noms sur n'importe quel site, et
-laisser l'utilisateur choisir librement ses propres sources d'actualité.
+The extension needs access to **all pages** (`<all_urls>`) for two reasons: to
+mark names on any website and to let users choose their own news sources.
 
 ---
 
-## 8. Aller plus loin
+## 8. Further setup
 
-- **Installation permanente et partage.** Pour installer l'extension durablement
-  (et la diffuser sur d'autres ordinateurs), il faut la faire signer :
-  - **Firefox** : via le site des modules Mozilla (AMO), qui fournit un fichier
-    `.xpi` signé — installable même en dehors du magasin public.
-  - **Chrome / Edge** : via le Chrome Web Store ou le magasin Edge (compte
-    développeur requis).
-- **Liste de départ pré-remplie (optionnel).** Placez le fichier
-  `browser-extension/data/names.json` dans l'arborescence source avant de lancer
-  `tools/build.sh`. Le script inclut uniquement ce fichier dans les paquets
-  Chrome et Firefox ; les autres fichiers éventuellement présents dans `data/`
-  sont ignorés. Le seed sert de liste initiale au premier lancement. Sans ce
-  fichier, aucun dossier `data/` n'est ajouté et la liste active démarre vide ;
-  les noms détectés sont d'abord placés en revue et ne l'intègrent qu'après
-  validation.
+- **Permanent installation and sharing.** For a durable installation or
+  distribution to other computers, the extension must be signed:
+  - **Firefox:** submit it through Mozilla Add-ons (AMO) to obtain a signed
+    `.xpi`, which can also be installed outside the public store.
+  - **Chrome / Edge:** use the Chrome Web Store or Microsoft Edge Add-ons Store
+    (a developer account is required).
+- **Optional pre-populated list.** Add `browser-extension/data/names.json` to
+  the source tree before running `tools/build.sh`. The script includes only
+  this file in both browser packages; any other files in `data/` are ignored.
+  The seed is used as the initial list on first launch. Without it, no `data/`
+  directory is packaged and the active list starts empty; detected names first
+  appear in review and are added only after approval.
 
 ---
 
-## 9. Questions fréquentes
+## 9. Frequently asked questions
 
-**La collecte prend un peu de temps, est-ce normal ?**
-Oui. Les flux sont lus par petits groupes en parallèle, mais leur disponibilité
-et le décodage des liens Google Actualités dépendent des services externes.
+**Collection takes a while. Is that normal?**
 
-**Le clic sur le 💩 ouvre-t-il tous les articles ?**
-Non : il affiche un menu de liens. Chaque lien s'ouvre individuellement dans un
-nouvel onglet, sans ouvrir les autres.
+Yes. Feeds are read in small concurrent batches, but availability and Google
+News link resolution depend on external services.
 
-**Je ne vois aucun 💩 sur une page. Pourquoi ?**
-Soit la page ne contient aucun nom déjà validé, soit la liste active est encore
-vide. Lancez « Rafraîchir maintenant », ouvrez « Revue des noms », vérifiez les
-articles puis ajoutez les personnes souhaitées. Rechargez ensuite la page.
-Vérifiez aussi que l'extension est activée.
+**Does clicking the 💩 open every article?**
 
-**Un nom est proposé alors que la personne ne semble pas concernée par le sujet.**
-Refusez la proposition : le nom restera masqué tant qu'aucun article daté plus
-récent ne le mentionnera à nouveau. Vous pourrez aussi la rouvrir depuis la liste
-des refusés. La
-détection ne détermine ni le rôle de la personne ni une quelconque responsabilité.
+No. It opens a menu of links. Each link opens individually in a new tab; the
+other articles do not open.
 
-**Mes réglages sont-ils conservés ?**
-Oui, tout est enregistré dans le navigateur et survit aux fermetures (sauf, sur
-Firefox, si l'extension a été chargée en mode temporaire — voir la section
-Installation).
+**Why do I not see a 💩 on a page?**
+
+The page may not contain an approved name, or the active list may still be
+empty. Click **Refresh now**, open **Name review**, check the articles, and
+approve the people you want. Then reload the page. Also check that the extension
+is enabled.
+
+**A name was proposed, but the person does not seem relevant to the topic.**
+
+Reject the proposal. The name will stay suppressed unless a later-dated article
+mentions it again. You can also reopen it from the rejected list. Detection does
+not establish the person's role or responsibility.
+
+**Are my settings saved?**
+
+Yes. Settings are saved in the browser and persist after closing it, except
+that Firefox removes temporary add-ons loaded through `about:debugging` when it
+closes. See [installation](#2-install-the-extension).
 
 ---
 
-## 10. Licence
+## 10. License
 
-Le code source et les éléments originaux de Shitlist sont distribués sous la
-licence [MIT](../LICENSE). Le fichier `LICENSE` est inclus dans les paquets
-Chrome et Firefox. Les composants tiers éventuels restent soumis à leurs
-propres avis de licence.
+The Shitlist source code and original materials are distributed under the
+[MIT License](../LICENSE). `LICENSE` is included in Chrome and Firefox packages.
+Third-party components remain subject to their own license notices.

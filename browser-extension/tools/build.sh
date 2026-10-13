@@ -14,7 +14,7 @@ copy_extension() {
     cp "$EXT_DIR/$file" "$target_dir/"
   done
   cp -R "$EXT_DIR/lib" "$EXT_DIR/icons" "$target_dir/"
-  # Seul le jeu de données documenté est autorisé dans les paquets.
+  # Only the documented data file may be included in packages.
   if [ -f "$EXT_DIR/data/names.json" ]; then
     mkdir -p "$target_dir/data"
     cp "$EXT_DIR/data/names.json" "$target_dir/data/names.json"

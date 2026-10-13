@@ -54,7 +54,7 @@ class FakeNode {
 
   replaceChild(replacement, oldChild) {
     const index = this.childNodes.indexOf(oldChild);
-    if (index < 0) throw new Error("Nœud à remplacer absent");
+    if (index < 0) throw new Error("Node to replace was not found");
     const replacements = replacement.nodeType === 11 ? [...replacement.childNodes] : [replacement];
     if (replacement.nodeType === 11) {
       replacement.childNodes = [];
@@ -71,7 +71,7 @@ class FakeNode {
 
   removeChild(child) {
     const index = this.childNodes.indexOf(child);
-    if (index < 0) throw new Error("Nœud enfant absent");
+    if (index < 0) throw new Error("Child node was not found");
     this.childNodes.splice(index, 1);
     child.parentNode = null;
     return child;
@@ -96,7 +96,7 @@ class FakeElement extends FakeNode {
 
 function makeContentScriptHarness() {
   const body = new FakeElement("body");
-  const initialText = new FakeNode(3, "#text", "Aucun nom à signaler.");
+  const initialText = new FakeNode(3, "#text", "No names to report.");
   body.appendChild(initialText);
   let domContentLoaded;
   const timers = [];
@@ -131,6 +131,7 @@ function makeContentScriptHarness() {
     storage: { local: { get(key, callback) {
       callback(key === "pn_enabled"
         ? { pn_enabled: true }
+        // Legacy keys are intentional: content can read storage before startup migration.
         : { pn_people: [{ prenom: "Marie", nom: "Martin", articles: [{ url: "https://news.example/marie" }] }] });
     } } },
   };
@@ -165,7 +166,7 @@ function makeContentScriptHarness() {
     async start() { await domContentLoaded(); },
     flushDebouncedScan() {
       const timer = timers.find((item) => item.delay === 500 && !item.ran);
-      assert.ok(timer, "un balayage différé doit être programmé");
+      assert.ok(timer, "a deferred scan should be scheduled");
       timer.ran = true;
       timer.callback();
     },
@@ -180,59 +181,59 @@ function markerNodes(page) {
 
 function textImmediatelyBeforeMarker(page) {
   const marker = markerNodes(page)[0];
-  assert.ok(marker, "le texte doit d'abord être marqué");
+  assert.ok(marker, "the text should be marked first");
   const index = page.body.childNodes.indexOf(marker);
   const textNode = page.body.childNodes[index - 1];
-  assert.equal(textNode && textNode.nodeType, 3, "le marqueur doit suivre un nœud texte");
+  assert.equal(textNode && textNode.nodeType, 3, "the marker should follow a text node");
   return textNode;
 }
 
 async function markExistingText(page) {
   await page.start();
-  assert.equal(page.observedOptions.at(-1).characterData, true, "l'observateur doit suivre characterData");
+  assert.equal(page.observedOptions.at(-1).characterData, true, "the observer should watch characterData");
   page.initialText.nodeValue = "Marie Martin";
   page.observer.callback([{ type: "characterData", target: page.initialText }]);
   page.flushDebouncedScan();
   assert.equal(markerNodes(page).length, 1);
 }
 
-test("ajouter du texte à un nœud déjà marqué ne crée pas un marqueur en double", async () => {
+test("appending text to an already marked node does not create a duplicate marker", async () => {
   const page = makeContentScriptHarness();
   await markExistingText(page);
 
   const textNode = textImmediatelyBeforeMarker(page);
-  textNode.nodeValue += " apparaît dans un texte modifié.";
+  textNode.nodeValue += " appears in edited text.";
   page.observer.callback([{ type: "characterData", target: textNode }]);
   page.flushDebouncedScan();
 
   assert.equal(markerNodes(page).length, 1);
-  assert.match(page.body.textContent, /Marie Martin💩 apparaît dans un texte modifié\./);
-  assert.equal(page.observedOptions.at(-1).characterData, true, "le suivi doit rester actif après le balayage");
+  assert.match(page.body.textContent, /Marie Martin💩 appears in edited text\./);
+  assert.equal(page.observedOptions.at(-1).characterData, true, "characterData observation should remain active after scanning");
 });
 
-test("supprimer le nom d'un nœud marqué supprime aussi son marqueur adjacent", async () => {
+test("removing a name from a marked node also removes its adjacent marker", async () => {
   const page = makeContentScriptHarness();
   await markExistingText(page);
 
   const textNode = textImmediatelyBeforeMarker(page);
   textNode.nodeValue = "";
   page.observer.callback([{ type: "characterData", target: textNode }]);
-  assert.equal(markerNodes(page).length, 0, "le marqueur périmé doit être retiré avant le rescannage");
+  assert.equal(markerNodes(page).length, 0, "the stale marker should be removed before rescanning");
   page.flushDebouncedScan();
 
   assert.equal(markerNodes(page).length, 0);
   assert.equal(page.body.textContent, "");
 });
 
-test("un nœud texte nouvellement ajouté continue d'être marqué", async () => {
+test("newly added text nodes continue to be marked", async () => {
   const page = makeContentScriptHarness();
   await page.start();
 
-  const addedText = page.createTextNode("Marie Martin apparaît dans un nœud ajouté.");
+  const addedText = page.createTextNode("Marie Martin appears in a newly added node.");
   page.body.appendChild(addedText);
   page.observer.callback([{ type: "childList", target: page.body, addedNodes: [addedText] }]);
   page.flushDebouncedScan();
 
   assert.equal(markerNodes(page).length, 1);
-  assert.match(page.body.textContent, /Marie Martin💩 apparaît dans un nœud ajouté\./);
+  assert.match(page.body.textContent, /Marie Martin💩 appears in a newly added node\./);
 });

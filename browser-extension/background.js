@@ -1,6 +1,6 @@
 // background.js — service worker (Chrome) / event page (Firefox).
-// Responsabilités : amorcer le stockage, collecter les articles RSS, garder
-// les nouveaux noms en revue humaine et router les actions de l'extension.
+// Responsibilities: initialize storage, collect RSS articles, keep new names
+// in human review, and route extension actions.
 // Prefer the callback-compatible Chrome namespace, also exposed by Firefox.
 const api = (typeof chrome !== "undefined") ? chrome : browser;
 
@@ -24,7 +24,7 @@ function normalizePersonKey(value) {
     .replace(/\s+/g, " ").trim().toLowerCase();
 }
 function personKey(person) {
-  return normalizePersonKey(((person && person.prenom) || "") + " " + ((person && person.nom) || ""));
+  return normalizePersonKey(((person && person.firstName) || "") + " " + ((person && person.lastName) || ""));
 }
 function isSafeWebUrl(value) {
   return typeof value === "string" && /^https?:\/\//i.test(value);
@@ -46,8 +46,8 @@ function mergePersonEvidence(...sources) {
     if (typeof source === "string" || (source && source.url)) { add(source); continue; }
     if (!source || typeof source !== "object") continue;
     if (source.wikipediaUrl) add({
-      title: "Wikipédia — " + [source.prenom, source.nom].filter(Boolean).join(" "),
-      source: "Wikipédia",
+      title: "Wikipedia — " + [source.firstName, source.lastName].filter(Boolean).join(" "),
+      source: "Wikipedia",
       url: source.wikipediaUrl,
     });
     (Array.isArray(source.articles) ? source.articles : []).forEach(add);
@@ -76,13 +76,13 @@ async function lookupWikipediaArticle(name) {
       const url = page && (page.fullurl || `https://${language}.wikipedia.org/wiki/${encodeURIComponent(String(page.title || title).replace(/ /g, "_"))}`);
       if (!url || !isWikipediaUrl(url)) continue;
       return {
-        title: `Wikipédia — ${page.title || title}`,
-        source: `Wikipédia (${language})`,
+        title: `Wikipedia — ${page.title || title}`,
+        source: `Wikipedia (${language})`,
         url,
         wikipedia: true,
       };
     } catch (e) {
-      // Indisponibilité ou absence de réseau : l'approbation doit rester possible.
+      // Keep approval available when the lookup service or network is unavailable.
     } finally {
       clearTimeout(timeout);
     }
@@ -96,9 +96,9 @@ function waitForReviews() {
   return REVIEW_REQUESTS ? new Promise((resolve) => REVIEW_WAITERS.push(resolve)) : Promise.resolve();
 }
 
-// Seed optionnel : aucune liste n'est packagée par défaut. Si le fichier
-// browser-extension/data/names.json existe avant la construction, le paquet
-// l'embarque et il sera utilisé comme liste initiale.
+// Optional seed: no list is packaged by default. If
+// browser-extension/data/names.json exists before the build, the package
+// includes it and uses it as the initial list.
 async function loadSeedPeople() {
   try {
     const res = await fetch(api.runtime.getURL("data/names.json"));
@@ -126,10 +126,10 @@ async function runCollection(reason) {
     await PNStore.setProposals(proposals);
     await PNStore.setRejectedNames(rejectedNames);
     await PNStore.setLastRun(stats);
-    console.log(`[press-names] collecte (${reason}) :`, stats);
+    console.log(`[press-names] collection (${reason}):`, stats);
     return { ok: true, stats };
   } catch (e) {
-    console.error("[press-names] collecte échouée:", e);
+    console.error("[press-names] collection failed:", e);
     return { ok: false, error: String(e) };
   } finally {
     COLLECTING = false;
@@ -158,15 +158,15 @@ async function applyProposalDecision(message) {
     const existing = existingIndex >= 0 ? people[existingIndex] : null;
     const priorEvidence = mergePersonEvidence(existing, proposal);
     let wikipedia = priorEvidence.find((article) => isWikipediaUrl(article.url)) || null;
-    if (!wikipedia) wikipedia = await lookupWikipediaArticle([proposal.prenom, proposal.nom].filter(Boolean).join(" "));
+    if (!wikipedia) wikipedia = await lookupWikipediaArticle([proposal.firstName, proposal.lastName].filter(Boolean).join(" "));
     const articles = mergePersonEvidence(existing, proposal, wikipedia);
     const person = {
       ...(existing || {}),
-      prenom: (existing && existing.prenom) || proposal.prenom || "",
-      nom: (existing && existing.nom) || proposal.nom || "",
+      firstName: (existing && existing.firstName) || proposal.firstName || "",
+      lastName: (existing && existing.lastName) || proposal.lastName || "",
       articles,
       urls: articles.map((article) => article.url),
-      nb_articles: articles.length,
+      articleCount: articles.length,
       first_seen: (existing && existing.first_seen) || proposal.firstSeen || today,
       last_seen: proposal.lastSeen || today,
     };
@@ -230,7 +230,7 @@ function queueProposalDecision(message) {
     if (!REVIEW_REQUESTS) REVIEW_WAITERS.splice(0).forEach((resolve) => resolve());
   });
   REVIEW_QUEUE = tracked.catch((e) => {
-    console.error("[press-names] revue de proposition échouée:", e);
+    console.error("[press-names] proposal review failed:", e);
   });
   return tracked;
 }
@@ -245,12 +245,12 @@ async function enrichWikipediaLinks() {
       const evidence = mergePersonEvidence(person);
       let wikipedia = evidence.find((article) => isWikipediaUrl(article.url)) || null;
       const alreadyLinked = !!wikipedia;
-      if (!wikipedia) wikipedia = await lookupWikipediaArticle([person.prenom, person.nom].filter(Boolean).join(" "));
+      if (!wikipedia) wikipedia = await lookupWikipediaArticle([person.firstName, person.lastName].filter(Boolean).join(" "));
       if (!wikipedia) return;
       const articles = mergePersonEvidence(person, wikipedia);
       person.articles = articles;
       person.urls = articles.map((article) => article.url);
-      person.nb_articles = articles.length;
+      person.articleCount = articles.length;
       person.wikipediaUrl = articles.find((article) => isWikipediaUrl(article.url)).url;
       if (!alreadyLinked) added++;
     }));
@@ -267,7 +267,7 @@ function queueWikipediaEnrichment() {
     if (!REVIEW_REQUESTS) REVIEW_WAITERS.splice(0).forEach((resolve) => resolve());
   });
   REVIEW_QUEUE = tracked.catch((e) => {
-    console.error("[press-names] enrichissement Wikipédia échoué:", e);
+    console.error("[press-names] Wikipedia enrichment failed:", e);
   });
   return tracked;
 }
@@ -277,7 +277,7 @@ async function init() {
   await PNStore.ensureSeeded(seed);
 }
 
-// Démarrage navigateur / installation → collecte si activé.
+// On browser startup or installation, collect if the extension is enabled.
 api.runtime.onStartup && api.runtime.onStartup.addListener(async () => {
   await init();
   if (await PNStore.getEnabled()) runCollection("startup");
@@ -321,5 +321,5 @@ api.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   return false;
 });
 
-// Amorçage au chargement du worker (utile si onStartup n'est pas déclenché).
+// Initialize when the worker loads in case onStartup was not triggered.
 init();

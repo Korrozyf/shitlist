@@ -70,19 +70,22 @@ test("new names stay pending; approved names get links; rejected names stay supp
     months: 0,
     excludedWords: [],
     excludedNames: [],
-  }, [{ prenom: "Jean", nom: "Dupont", urls: [] }], null, {
+  }, [{ firstName: "Jean", lastName: "Dupont", urls: [] }], null, {
     proposals: [],
     rejectedNames: [{
-      prenom: "Sophie", nom: "Moreau", rejectedAt: "2026-10-02T10:00:00.000Z",
+      firstName: "Sophie", lastName: "Moreau", rejectedAt: "2026-10-02T10:00:00.000Z",
       articles: [{ url: articleUrl, date: "2026-10-01T10:00:00.000Z" }],
     }],
   });
 
   assert.equal(result.people.length, 1, "collection must not add a newly detected person to the active list");
+  assert.equal(result.people[0].firstName, "Jean");
+  assert.equal(result.people[0].lastName, "Dupont");
+  assert.equal(result.people[0].articleCount, 1);
   assert.deepEqual(Array.from(result.people[0].urls), [articleUrl], "the article link for an already approved person is refreshed");
   assert.equal(result.proposals.length, 1);
-  assert.equal(result.proposals[0].prenom, "Marie");
-  assert.equal(result.proposals[0].nom, "Martin");
+  assert.equal(result.proposals[0].firstName, "Marie");
+  assert.equal(result.proposals[0].lastName, "Martin");
   assert.equal(result.proposals[0].articles.length, 1);
   assert.equal(result.proposals[0].articles[0].title, "Jean Dupont et Marie Martin dans une affaire de violences conjugales");
   assert.equal(result.proposals[0].articles[0].source, "Journal Exemple");
@@ -123,13 +126,13 @@ test("a rejected name is proposed again only when a newer article mentions it", 
   }, [], null, {
     proposals: [],
     rejectedNames: [{
-      prenom: "Marie", nom: "Martin", rejectedAt: "2026-10-02T12:00:00.000Z",
+      firstName: "Marie", lastName: "Martin", rejectedAt: "2026-10-02T12:00:00.000Z",
       articles: [{ url: "https://journal.example/previous", date: "2026-10-02T09:00:00.000Z" }],
     }],
   });
 
   assert.equal(result.proposals.length, 1);
-  assert.equal(result.proposals[0].prenom, "Marie");
+  assert.equal(result.proposals[0].firstName, "Marie");
   assert.deepEqual(Array.from(result.proposals[0].articles, (article) => article.url), [newerUrl]);
   assert.equal(result.rejectedNames.length, 0, "the renewed proposal is removed from the rejected list");
   assert.equal(result.stats.newProposals, 1);

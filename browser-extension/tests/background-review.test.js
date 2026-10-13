@@ -69,8 +69,8 @@ async function makeBackground(initial, fetchImpl) {
 test("approve moves a proposal to the active list with evidence links", async () => {
   const app = await makeBackground({
     proposals: [{
-      prenom: "Marie",
-      nom: "Martin",
+      firstName: "Marie",
+      lastName: "Martin",
       firstSeen: "2026-10-07",
       lastSeen: "2026-10-07",
       articles: [{ title: "Article", url: "https://news.example/article" }],
@@ -79,6 +79,9 @@ test("approve moves a proposal to the active list with evidence links", async ()
   const result = await app.dispatch({ type: "REVIEW_PROPOSAL", action: "approve", name: "Marie Martin" });
   assert.equal(result.ok, true);
   assert.equal(app.data.people.length, 1);
+  assert.equal(app.data.people[0].firstName, "Marie");
+  assert.equal(app.data.people[0].lastName, "Martin");
+  assert.equal(app.data.people[0].articleCount, 1);
   assert.deepEqual(app.data.people[0].urls, ["https://news.example/article"]);
   assert.equal(app.data.proposals.length, 0);
 });
@@ -86,10 +89,10 @@ test("approve moves a proposal to the active list with evidence links", async ()
 test("approval stores an exact Wikipedia page before the supporting articles", async () => {
   const app = await makeBackground({
     proposals: [{
-      prenom: "Marie",
-      nom: "Martin",
+      firstName: "Marie",
+      lastName: "Martin",
       firstSeen: "2026-10-07",
-      articles: [{ title: "Article de presse", url: "https://news.example/article" }],
+      articles: [{ title: "News article", url: "https://news.example/article" }],
     }],
   }, async (url) => {
     if (url.startsWith("moz-extension://")) return { ok: false };
@@ -111,14 +114,14 @@ test("approval stores an exact Wikipedia page before the supporting articles", a
     "https://fr.wikipedia.org/wiki/Marie_Martin",
     "https://news.example/article",
   ]);
-  assert.equal(app.data.people[0].articles[0].source, "Wikipédia (fr)");
+  assert.equal(app.data.people[0].articles[0].source, "Wikipedia (fr)");
 });
 
 test("bulk Wikipedia enrichment adds links only when absent and keeps them first", async () => {
   const app = await makeBackground({
     people: [
-      { prenom: "Marie", nom: "Martin", urls: ["https://news.example/marie"] },
-      { prenom: "Jean", nom: "Dupont", urls: ["https://fr.wikipedia.org/wiki/Jean_Dupont", "https://news.example/jean"] },
+      { firstName: "Marie", lastName: "Martin", urls: ["https://news.example/marie"] },
+      { firstName: "Jean", lastName: "Dupont", urls: ["https://fr.wikipedia.org/wiki/Jean_Dupont", "https://news.example/jean"] },
     ],
   }, async (url) => {
     if (url.startsWith("moz-extension://")) return { ok: false };
@@ -142,8 +145,8 @@ test("bulk Wikipedia enrichment adds links only when absent and keeps them first
 test("reject suppresses the proposal and restore reopens it with its evidence", async () => {
   const app = await makeBackground({
     proposals: [{
-      prenom: "Marie",
-      nom: "Martin",
+      firstName: "Marie",
+      lastName: "Martin",
       firstSeen: "2026-10-07",
       articles: [{ title: "Article", url: "https://news.example/article" }],
     }],
@@ -151,7 +154,7 @@ test("reject suppresses the proposal and restore reopens it with its evidence", 
   const rejected = await app.dispatch({ type: "REVIEW_PROPOSAL", action: "reject", name: "Marie Martin" });
   assert.equal(rejected.ok, true);
   assert.equal(app.data.proposals.length, 0);
-  assert.equal(app.data.rejectedNames[0].prenom, "Marie");
+  assert.equal(app.data.rejectedNames[0].firstName, "Marie");
   assert.match(app.data.rejectedNames[0].rejectedAt, /^\d{4}-\d{2}-\d{2}T/);
 
   const restored = await app.dispatch({ type: "REVIEW_PROPOSAL", action: "restore", name: "Marie Martin" });

@@ -1,8 +1,8 @@
-// collector.js — collecte les articles RSS, filtre par thème + période et
-// extrait des noms candidats (« Prénom Nom »). Les nouveaux noms sont stockés
-// comme propositions : ils ne rejoignent la liste active qu'après validation.
-// Dépendances (globals) : PN_FIRST_NAMES, pnFetchFeed, pnDecodeGoogleNews,
-// pnIsGoogleNews. Exposé en global : pnCollect(config, people, onProgress, reviewState)
+// collector.js — collects RSS articles, filters by topic and period, and
+// extracts candidate names ("First Last"). New names are stored as proposals
+// and enter the active list only after approval.
+// Dependencies (globals): PN_FIRST_NAMES, pnFetchFeed, pnDecodeGoogleNews,
+// pnIsGoogleNews. Exposed globally as pnCollect(config, people, onProgress, reviewState).
 (function (root) {
   "use strict";
 
@@ -38,7 +38,7 @@
     return stripAccents(s).toLowerCase().replace(/\.$/, "");
   }
   function personKey(p) {
-    return normKey(((p && p.prenom) || "") + " " + ((p && p.nom) || ""));
+    return normKey(((p && p.firstName) || "") + " " + ((p && p.lastName) || ""));
   }
 
   function plausibleToken(tok, blockWords) {
@@ -60,16 +60,16 @@
     );
     let m;
     while ((m = re.exec(text)) !== null) {
-      const first = m[1];
+      const firstName = m[1];
       const particle = m[2] || "";
       const surname = m[3];
-      if (!firstNames.has(normTok(first))) continue;
+      if (!firstNames.has(normTok(firstName))) continue;
       if (!plausibleToken(surname, blockWords)) continue;
-      const full = [first, particle, surname].filter(Boolean).join(" ");
+      const full = [firstName, particle, surname].filter(Boolean).join(" ");
       const key = normKey(full);
       if (nameBlock.has(key) || seen.has(key)) continue;
       seen.add(key);
-      out.push({ full, prenom: first, nom: (particle ? particle + " " : "") + surname });
+      out.push({ full, firstName, lastName: (particle ? particle + " " : "") + surname });
     }
     return out;
   }
@@ -84,9 +84,9 @@
     return false;
   }
 
-  // Construit plusieurs requêtes Google News RSS de taille maîtrisée à partir
-  // des mots-clés. Les phrases restent entre guillemets et les termes d'un
-  // même lot sont reliés par OR afin d'élargir la couverture sans requête géante.
+  // Build multiple bounded Google News RSS queries from the keywords. Keep
+  // phrases quoted and join terms in each batch with OR to broaden coverage
+  // without creating an oversized query.
   function buildGoogleNewsFeeds(config) {
     if (config.googleNewsSearch === false) return [];
     const keywords = [];
@@ -254,8 +254,8 @@
       if (!key) continue;
       approvedByKey.set(key, {
         ...p,
-        nom: p.nom || "",
-        prenom: p.prenom || "",
+        lastName: p.lastName || "",
+        firstName: p.firstName || "",
         urls: new Set(Array.isArray(p.urls) ? p.urls : []),
         first_seen: p.first_seen || null,
         last_seen: p.last_seen || null,
@@ -298,7 +298,7 @@
         if (!matchesTheme(text, keywordsNorm, minKw)) { skippedTheme++; continue; }
 
         const article = makeArticle(item, feeds[i]);
-        // Une proposition doit toujours être vérifiable par un lien d'article.
+        // Every proposal must be verifiable through an article link.
         if (!article.url || !/^https?:\/\//i.test(article.url)) continue;
         for (const person of extractNames(text, firstNames, blockWords, nameBlock)) {
           staged.push({ person, key: normKey(person.full), article: { ...article } });
@@ -324,8 +324,8 @@
       let proposal = pendingByKey.get(key);
       if (!proposal) {
         proposal = {
-          prenom: person.prenom,
-          nom: person.nom,
+          firstName: person.firstName,
+          lastName: person.lastName,
           firstSeen: today,
           lastSeen: today,
           articles: [],
@@ -341,12 +341,12 @@
     const people = Array.from(approvedByKey.values()).map((p) => ({
       ...p,
       urls: Array.from(p.urls),
-      nb_articles: p.urls.size,
-    })).sort((a, b) => b.nb_articles - a.nb_articles || a.nom.localeCompare(b.nom));
+      articleCount: p.urls.size,
+    })).sort((a, b) => b.articleCount - a.articleCount || a.lastName.localeCompare(b.lastName));
 
     const proposals = Array.from(pendingByKey.values())
       .map((p) => ({ ...p, articles: (p.articles || []).slice().sort((a, b) => (b.date || "").localeCompare(a.date || "")).slice(0, MAX_ARTICLES_PER_PROPOSAL) }))
-      .sort((a, b) => (b.articles.length - a.articles.length) || a.nom.localeCompare(b.nom));
+      .sort((a, b) => (b.articles.length - a.articles.length) || a.lastName.localeCompare(b.lastName));
 
     return {
       people,

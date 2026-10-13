@@ -1,111 +1,111 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Shitlist 💩 — Panneau de contrôle</title>
+  <title>Shitlist 💩 — Control panel</title>
   <link rel="stylesheet" href="options.css" />
 </head>
 <body>
   <header>
-    <h1>Shitlist <span aria-hidden="true">💩</span> — Panneau de contrôle</h1>
+    <h1>Shitlist <span aria-hidden="true">💩</span> — Control panel</h1>
     <div class="actions">
-      <button id="runBtn" class="primary">🔄 Rafraîchir la liste maintenant</button>
-      <span id="runStatus" class="muted"></span>
+      <button id="runBtn" class="primary">🔄 Refresh list now</button>
+      <span id="runStatus" class="muted" aria-live="polite"></span>
     </div>
   </header>
 
-  <nav class="tabs">
-    <button class="tab active" data-tab="names">Noms</button>
-    <button class="tab" data-tab="review">Revue des noms <span id="reviewBadge" class="tab-badge">0</span></button>
-    <button class="tab" data-tab="themes">Thématiques &amp; mots-clés</button>
-    <button class="tab" data-tab="exclusions">Mots &amp; noms exclus</button>
-    <button class="tab" data-tab="feeds">Flux &amp; période</button>
+  <nav class="tabs" aria-label="Settings sections">
+    <button class="tab active" data-tab="names">Names</button>
+    <button class="tab" data-tab="review">Name review <span id="reviewBadge" class="tab-badge">0</span></button>
+    <button class="tab" data-tab="themes">Topics &amp; keywords</button>
+    <button class="tab" data-tab="exclusions">Excluded words &amp; names</button>
+    <button class="tab" data-tab="feeds">Feeds &amp; period</button>
   </nav>
 
-  <!-- ===== Noms ===== -->
+  <!-- ===== Names ===== -->
   <section id="tab-names" class="panel active">
     <div class="toolbar">
-      <input type="search" id="nameSearch" placeholder="Filtrer par nom…" />
+      <input type="search" id="nameSearch" placeholder="Filter by name…" aria-label="Filter active names" />
       <span class="muted" id="namesCount"></span>
       <span class="grow"></span>
-      <button id="addName">+ Ajouter une personne</button>
-      <button id="enrichWikipedia" type="button">Compléter les liens Wikipédia manquants</button>
-      <button id="saveNames" class="primary">💾 Enregistrer les noms</button>
+      <button id="addName">+ Add person</button>
+      <button id="enrichWikipedia" type="button">Find missing Wikipedia links</button>
+      <button id="saveNames" class="primary">💾 Save names</button>
     </div>
-    <p class="hint">Les liens s'ouvrent individuellement dans un nouvel onglet. Quand un lien Wikipédia est enregistré, il apparaît en premier. À l'approbation d'un nom, une recherche de page Wikipédia exacte est tentée ; le bouton permet de compléter les personnes déjà dans la liste.</p>
+    <p class="hint">Links open individually in a new tab. A saved Wikipedia link appears first. When a name is approved, an exact Wikipedia page lookup is attempted; this button searches for people already in the list.</p>
     <div class="table-wrap">
       <table id="namesTable">
         <thead>
-          <tr><th>Prénom</th><th>Nom</th><th>Articles</th><th>Articles associés (liens cliquables)</th><th></th></tr>
+          <tr><th scope="col">First name</th><th scope="col">Last name</th><th scope="col">Articles</th><th scope="col">Associated articles (clickable links)</th><th scope="col">Actions</th></tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
   </section>
 
-  <!-- ===== Revue humaine des propositions ===== -->
+  <!-- ===== Proposal review ===== -->
   <section id="tab-review" class="panel">
-    <h2>Noms proposés à la vérification</h2>
-    <p class="review-notice"><strong>À savoir :</strong> une proposition signifie seulement qu'un nom a été détecté dans un article correspondant aux mots-clés. Cela ne détermine ni le rôle de la personne dans l'article ni une quelconque responsabilité. Vérifiez l'article avant d'ajouter le nom à la liste active.</p>
+    <h2>Names proposed for review</h2>
+    <p class="review-notice"><strong>Important:</strong> a proposal only means that a name was detected in an article matching the keywords. It does not establish the person's role in the article or any responsibility. Check the article before adding the name to the active list.</p>
     <div class="toolbar">
-      <input type="search" id="proposalSearch" placeholder="Filtrer les propositions…" />
+      <input type="search" id="proposalSearch" placeholder="Filter proposals…" aria-label="Filter pending and rejected proposals" />
       <span class="muted" id="proposalsCount"></span>
     </div>
     <div id="proposalList" class="proposal-list"></div>
     <details id="rejectedSection" class="rejected-section">
-      <summary>Propositions refusées <span id="rejectedCount">(0)</span></summary>
+      <summary>Rejected proposals <span id="rejectedCount">(0)</span></summary>
       <div id="rejectedList" class="rejected-list"></div>
     </details>
   </section>
 
-  <!-- ===== Thématiques ===== -->
+  <!-- ===== Topics ===== -->
   <section id="tab-themes" class="panel">
-    <label>Description du thème
+    <label>Topic description
       <input type="text" id="cfgDescription" />
     </label>
-    <label>Mots-clés (un par ligne). Un article est retenu s'il en contient au moins <em>N</em>.
+    <label>Keywords (one per line). An article is kept if it contains at least <em>N</em> keywords.
       <textarea id="cfgKeywords" rows="12"></textarea>
     </label>
-    <label>Nombre minimum de mots-clés (N)
+    <label>Minimum number of matching keywords (N)
       <input type="number" id="cfgMinKeywords" min="1" step="1" />
     </label>
-    <button id="saveThemes" class="primary">💾 Enregistrer les thématiques</button>
+    <button id="saveThemes" class="primary">💾 Save topics</button>
   </section>
 
   <!-- ===== Exclusions ===== -->
   <section id="tab-exclusions" class="panel">
-    <label>Mots interdits (un par ligne) — si un mot du nom figure ici, le nom est rejeté.
+    <label>Excluded words (one per line) — a name is rejected if it contains any of these words.
       <textarea id="cfgExcludedWords" rows="10"></textarea>
     </label>
-    <label>Noms complets exclus (un par ligne).
+    <label>Excluded full names (one per line).
       <textarea id="cfgExcludedNames" rows="8"></textarea>
     </label>
-    <button id="saveExclusions" class="primary">💾 Enregistrer les exclusions</button>
+    <button id="saveExclusions" class="primary">💾 Save exclusions</button>
   </section>
 
-  <!-- ===== Flux & période ===== -->
+  <!-- ===== Feeds and period ===== -->
   <section id="tab-feeds" class="panel">
-    <label class="check-label"><input type="checkbox" id="cfgGoogleNewsSearch" /> Générer des recherches Google Actualités à partir des mots-clés du thème</label>
+    <label class="check-label"><input type="checkbox" id="cfgGoogleNewsSearch" /> Generate Google News searches from the topic keywords</label>
     <div class="form-grid">
-      <label>Langue (code court, par ex. fr)
+      <label>Language (short code, e.g. fr)
         <input type="text" id="cfgGoogleNewsLanguage" maxlength="5" />
       </label>
-      <label>Pays (code ISO, par ex. FR)
+      <label>Country (ISO code, e.g. FR)
         <input type="text" id="cfgGoogleNewsRegion" maxlength="2" />
       </label>
     </div>
-    <p class="hint">Les mots-clés sont regroupés en requêtes OR de taille limitée ; les flux personnalisés ci-dessous sont interrogés en complément.</p>
-    <label>Flux RSS personnalisés (un par ligne).
+    <p class="hint">Keywords are grouped into bounded OR queries. The custom feeds below are queried in addition to Google News.</p>
+    <label>Custom RSS feeds (one per line).
       <textarea id="cfgFeeds" rows="12"></textarea>
     </label>
-    <label>Période : ne retenir que les articles publiés depuis N mois (0 = illimité).
+    <label>Publication period: keep articles published within the last N months (0 = unlimited).
       <input type="number" id="cfgMonths" min="0" step="1" />
     </label>
-    <button id="saveFeeds" class="primary">💾 Enregistrer les flux &amp; période</button>
+    <button id="saveFeeds" class="primary">💾 Save feeds &amp; period</button>
   </section>
 
-  <div id="toast" class="toast"></div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <script src="lib/config.js"></script>
   <script src="lib/store.js"></script>

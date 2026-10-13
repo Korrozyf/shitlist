@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Shitlist 💩</title>
   <style>
-    :root { --bleu: #1b3a6b; --accent: #2563eb; }
+    :root { --blue: #1b3a6b; --accent: #2563eb; }
     * { box-sizing: border-box; }
     body { width: 300px; margin: 0; font: 13px/1.4 system-ui, -apple-system, sans-serif; color: #1f2937; }
-    header { background: var(--bleu); color: #fff; padding: 12px 14px; }
+    header { background: var(--blue); color: #fff; padding: 12px 14px; }
     header h1 { margin: 0; font-size: 15px; font-weight: 600; }
     .body { padding: 12px 14px; }
     .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
@@ -32,20 +32,20 @@
   <header><h1>Shitlist 💩</h1></header>
   <div class="body">
     <div class="row">
-      <span>Extension active</span>
-      <label class="switch">
+      <span aria-hidden="true">Extension enabled</span>
+      <label class="switch" aria-label="Extension enabled">
         <input type="checkbox" id="enabled" />
-        <span class="slider"></span>
+        <span class="slider" aria-hidden="true"></span>
       </label>
     </div>
-    <div class="row"><span class="muted">Noms dans la liste active</span><span class="stat" id="count">—</span></div>
-    <div class="row"><span class="muted">Noms à vérifier</span><span class="stat" id="proposalCount">—</span></div>
-    <div class="row"><span class="muted">Dernière collecte</span><span id="lastrun" class="muted">—</span></div>
-    <button class="primary" id="refresh">🔄 Rafraîchir maintenant</button>
-    <div id="status" class="muted"></div>
+    <div class="row"><span class="muted">Names in active list</span><span class="stat" id="count">—</span></div>
+    <div class="row"><span class="muted">Names awaiting review</span><span class="stat" id="proposalCount">—</span></div>
+    <div class="row"><span class="muted">Last collection</span><span id="lastRun" class="muted">—</span></div>
+    <button class="primary" id="refresh">🔄 Refresh now</button>
+    <div id="status" class="muted" aria-live="polite"></div>
     <hr />
     <div class="row">
-      <button class="link" id="openOptions">⚙️ Examiner / régler</button>
+      <button class="link" id="openOptions">⚙️ Review / settings</button>
     </div>
   </div>
   <script src="popup.js"></script>

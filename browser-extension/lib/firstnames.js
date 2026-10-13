@@ -1,15 +1,15 @@
-// firstnames.js — dictionnaire (gazetteer) de prénoms courants FR +
-// internationaux. Sert à l'extraction de noms côté extension : une séquence
-// « Prénom Nom » n'est retenue comme personne que si le 1er mot est un prénom
-// connu. Cela remplace la NER spaCy (indisponible en JS) avec une bonne
-// précision. Comparaison insensible casse/accents (clés déjà normalisées).
+// firstnames.js — dictionary of common French and international first names.
+// It supports name extraction: a "First Last" sequence is treated as a person
+// only when the first word is a known first name. This replaces spaCy NER (not
+// available in JavaScript) with reasonable precision. Matching ignores case
+// and accents; keys are already normalized.
 //
-// Exposé en global PN_FIRST_NAMES (Set de prénoms normalisés sans accents).
+// Exposed globally as PN_FIRST_NAMES (a Set of normalized, accent-free names).
 (function (root) {
   "use strict";
 
   const RAW = [
-    // — Masculins FR fréquents —
+    // — Common French male first names —
     "jean", "pierre", "paul", "jacques", "michel", "andre", "philippe",
     "alain", "bernard", "claude", "daniel", "gerard", "gerald", "roger",
     "marcel", "henri", "louis", "georges", "rene", "robert", "guy", "yves",
@@ -29,7 +29,7 @@
     "morgan", "yannick", "yann", "steve", "bilal", "karim", "mehdi", "samir",
     "rachid", "mohamed", "mohammed", "amine", "yassine", "nabil", "sofiane",
     "rayan", "adam", "ismael", "ibrahim", "youssef", "hamza", "farid",
-    // — Féminins FR fréquents —
+    // — Common French female first names —
     "marie", "jeanne", "monique", "catherine", "francoise", "isabelle",
     "sylvie", "nathalie", "martine", "christine", "brigitte", "nicole",
     "veronique", "sandrine", "valerie", "caroline", "celine", "aurelie",
@@ -45,7 +45,7 @@
     "fatima", "leila", "amel", "samira", "nadia", "malika", "karima",
     "rachida", "christiane", "elisabeth", "beatrice", "dominique", "muriel",
     "estelle", "sabrina", "emilie", "justine", "morgane", "ophelie",
-    // — International courant —
+    // — Common international first names —
     "john", "james", "robert", "william", "richard", "david", "joseph",
     "mark", "steven", "kevin", "brian", "george", "donald", "barack",
     "joe", "michael", "chris", "peter", "paul", "tom", "harry", "jack",

@@ -1,4 +1,4 @@
-// options.js — panneau de contrôle et revue humaine des noms proposés.
+// options.js — control panel and human review of proposed names.
 (() => {
   "use strict";
   // Prefer the callback-compatible Chrome namespace, also exposed by Firefox.
@@ -18,7 +18,7 @@
   }
   const linesToArr = (s) => s.split("\n").map((x) => x.trim()).filter(Boolean);
   const arrToLines = (a) => (a || []).join("\n");
-  const fullName = (p) => [p.prenom, p.nom].filter(Boolean).join(" ").trim();
+  const fullName = (p) => [p.firstName, p.lastName].filter(Boolean).join(" ").trim();
 
   function isSafeUrl(value) {
     return typeof value === "string" && /^https?:\/\//i.test(value);
@@ -37,16 +37,23 @@
       const url = article.url.trim();
       byUrl.set(url, { ...(byUrl.get(url) || {}), ...article, url });
     };
-    if (person.wikipediaUrl) add({ title: "Wikipédia — " + fullName(person), source: "Wikipédia", url: person.wikipediaUrl });
+    if (person.wikipediaUrl) add({ title: "Wikipedia — " + fullName(person), source: "Wikipedia", url: person.wikipediaUrl });
     (Array.isArray(person.articles) ? person.articles : []).forEach(add);
     (Array.isArray(person.urls) ? person.urls : []).forEach(add);
     return Array.from(byUrl.values()).sort((a, b) => Number(isWikipediaUrl(b.url)) - Number(isWikipediaUrl(a.url)));
   }
 
+  // Translate only legacy Wikipedia labels saved by older extension versions.
+  function englishWikipediaLabel(value) {
+    return String(value || "")
+      .replace(/^Page Wikipédia(?=$|\s*[—(])/, "Wikipedia page")
+      .replace(/^Wikipédia(?=$|\s*[—(])/, "Wikipedia");
+  }
+
   function articleLinkLabel(article) {
-    if (article.title) return article.title;
-    if (isWikipediaUrl(article.url)) return "Page Wikipédia";
-    if (article.source) return article.source;
+    if (article.title) return englishWikipediaLabel(article.title);
+    if (isWikipediaUrl(article.url)) return "Wikipedia page";
+    if (article.source) return englishWikipediaLabel(article.source);
     try { return new URL(article.url).hostname.replace(/^www\./i, ""); }
     catch (e) { return article.url; }
   }
@@ -56,7 +63,7 @@
     if (button) button.click();
   }
 
-  // ---------- Onglets ----------
+  // ---------- Tabs ----------
   document.querySelectorAll(".tab").forEach((btn) => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
@@ -66,7 +73,7 @@
     });
   });
 
-  // ---------- Chargement ----------
+  // ---------- Loading ----------
   async function load() {
     config = await PNStore.getConfig();
     people = await PNStore.getPeople();
@@ -79,28 +86,32 @@
     if (requestedTab) activateTab(requestedTab);
   }
 
-  // ---------- Noms déjà validés ----------
-  function renderNames(filter) {
+  // ---------- Approved names ----------
+  function renderNames(filterText) {
     const tbody = $("namesTable").querySelector("tbody");
     tbody.innerHTML = "";
-    const f = (filter || "").toLowerCase();
+    const normalizedFilter = (filterText || "").toLowerCase();
     let shown = 0;
     people.forEach((p, i) => {
       const label = fullName(p).toLowerCase();
-      if (f && label.indexOf(f) === -1) return;
+      if (normalizedFilter && label.indexOf(normalizedFilter) === -1) return;
       shown++;
       const tr = document.createElement("tr");
       tr.dataset.index = i;
       tr.innerHTML =
-        '<td><input class="f-prenom" value=""></td>' +
-        '<td><input class="f-nom" value=""></td>' +
-        '<td class="nb"></td>' +
+        '<td><input class="first-name-input" value=""></td>' +
+        '<td><input class="last-name-input" value=""></td>' +
+        '<td class="article-count"></td>' +
         '<td class="article-links"></td>' +
-        '<td class="act"><button class="danger f-del">Suppr.</button></td>';
-      tr.querySelector(".f-prenom").value = p.prenom || "";
-      tr.querySelector(".f-nom").value = p.nom || "";
+        '<td class="act"><button type="button" class="danger delete-button">Remove</button></td>';
+      const firstNameInput = tr.querySelector(".first-name-input");
+      const lastNameInput = tr.querySelector(".last-name-input");
+      firstNameInput.value = p.firstName || "";
+      lastNameInput.value = p.lastName || "";
+      firstNameInput.setAttribute("aria-label", `First name for ${fullName(p) || "new person"}`);
+      lastNameInput.setAttribute("aria-label", `Last name for ${fullName(p) || "new person"}`);
       const articles = articleLinksFor(p);
-      tr.querySelector(".nb").textContent = articles.length;
+      tr.querySelector(".article-count").textContent = articles.length;
       const articleCell = tr.querySelector(".article-links");
       if (articles.length) {
         const list = document.createElement("ul");
@@ -120,22 +131,23 @@
       } else {
         const empty = document.createElement("span");
         empty.className = "muted";
-        empty.textContent = "Aucun article lié";
+        empty.textContent = "No linked articles";
         articleCell.appendChild(empty);
       }
       const editor = document.createElement("details");
       editor.className = "url-editor";
       const summary = document.createElement("summary");
-      summary.textContent = "Modifier les liens";
+      summary.textContent = "Edit links";
       const textarea = document.createElement("textarea");
-      textarea.className = "f-urls";
+      textarea.className = "article-urls-input";
+      textarea.setAttribute("aria-label", `Article URLs for ${fullName(p) || "new person"}`);
       textarea.rows = 3;
       textarea.value = articles.map((article) => article.url).join("\n");
       editor.append(summary, textarea);
       articleCell.appendChild(editor);
       tbody.appendChild(tr);
     });
-    $("namesCount").textContent = `${people.length} personne(s) dans la liste active` + (f ? ` (${shown} affichée(s))` : "");
+    $("namesCount").textContent = `${people.length} people in the active list` + (normalizedFilter ? ` (${shown} shown)` : "");
   }
 
   function collectNamesFromDom() {
@@ -143,31 +155,31 @@
     rows.forEach((tr) => {
       const i = parseInt(tr.dataset.index, 10);
       if (isNaN(i) || !people[i]) return;
-      const prenom = tr.querySelector(".f-prenom").value.trim();
-      const nom = tr.querySelector(".f-nom").value.trim();
-      const urls = linesToArr(tr.querySelector(".f-urls").value).filter(isSafeUrl);
+      const firstName = tr.querySelector(".first-name-input").value.trim();
+      const lastName = tr.querySelector(".last-name-input").value.trim();
+      const urls = linesToArr(tr.querySelector(".article-urls-input").value).filter(isSafeUrl);
       const oldArticles = articleLinksFor(people[i]);
       const oldByUrl = new Map(oldArticles.map((article) => [article.url, article]));
       const articles = urls.map((url) => oldByUrl.get(url) || { url })
         .sort((a, b) => Number(isWikipediaUrl(b.url)) - Number(isWikipediaUrl(a.url)));
-      const updated = { ...people[i], prenom, nom, urls: articles.map((article) => article.url), articles, nb_articles: articles.length };
+      const updated = { ...people[i], firstName, lastName, urls: articles.map((article) => article.url), articles, articleCount: articles.length };
       const wikipedia = articles.find((article) => isWikipediaUrl(article.url));
       if (wikipedia) updated.wikipediaUrl = wikipedia.url;
       else delete updated.wikipediaUrl;
       people[i] = updated;
     });
-    people = people.filter((p) => (p.nom || p.prenom));
+    people = people.filter((p) => (p.lastName || p.firstName));
   }
 
   $("nameSearch").addEventListener("input", (e) => renderNames(e.target.value));
   $("addName").addEventListener("click", () => {
     collectNamesFromDom();
-    people.unshift({ prenom: "", nom: "", urls: [], nb_articles: 0 });
+    people.unshift({ firstName: "", lastName: "", urls: [], articleCount: 0 });
     $("nameSearch").value = "";
     renderNames();
   });
   $("namesTable").addEventListener("click", (e) => {
-    if (!e.target.classList.contains("f-del")) return;
+    if (!e.target.classList.contains("delete-button")) return;
     const tr = e.target.closest("tr");
     const i = parseInt(tr.dataset.index, 10);
     collectNamesFromDom();
@@ -176,18 +188,18 @@
   });
   $("saveNames").addEventListener("click", async () => {
     collectNamesFromDom();
-    people = people.filter((p) => (p.nom || p.prenom));
-    people.sort((a, b) => (b.nb_articles || 0) - (a.nb_articles || 0) || (a.nom || "").localeCompare(b.nom || ""));
+    people = people.filter((p) => (p.lastName || p.firstName));
+    people.sort((a, b) => (b.articleCount || 0) - (a.articleCount || 0) || (a.lastName || "").localeCompare(b.lastName || ""));
     await PNStore.setPeople(people);
     renderNames($("nameSearch").value);
-    toast("Liste des noms validés enregistrée ✔");
+    toast("Approved names saved ✔");
   });
 
-  // ---------- Revue humaine des propositions ----------
+  // ---------- Proposal review ----------
   function formatDate(value) {
-    if (!value) return "Date non indiquée";
+    if (!value) return "Date not provided";
     const date = new Date(value);
-    return isNaN(date.getTime()) ? "Date non indiquée" : date.toLocaleDateString("fr-FR", { day: "2-digit", month: "long", year: "numeric" });
+    return isNaN(date.getTime()) ? "Date not provided" : date.toLocaleDateString("en-US", { day: "2-digit", month: "long", year: "numeric" });
   }
 
   function addArticleEvidence(container, article) {
@@ -202,13 +214,13 @@
       item.appendChild(link);
     } else {
       const title = document.createElement("span");
-      title.textContent = article.title || "Lien d'article indisponible";
+      title.textContent = article.title || "Article link unavailable";
       item.appendChild(title);
     }
 
     const meta = document.createElement("p");
     meta.className = "proposal-source";
-    meta.textContent = [article.source, formatDate(article.date)].filter(Boolean).join(" · ");
+    meta.textContent = [englishWikipediaLabel(article.source), formatDate(article.date)].filter(Boolean).join(" · ");
     item.appendChild(meta);
     if (article.summary) {
       const summary = document.createElement("p");
@@ -222,8 +234,8 @@
   function renderRejected(filter) {
     const container = $("rejectedList");
     container.replaceChildren();
-    const f = (filter || "").toLocaleLowerCase("fr");
-    const rows = rejectedNames.filter((p) => !f || fullName(p).toLocaleLowerCase("fr").includes(f));
+    const normalizedFilter = (filter || "").toLowerCase();
+    const rows = rejectedNames.filter((p) => !normalizedFilter || fullName(p).toLowerCase().includes(normalizedFilter));
     $("rejectedCount").textContent = `(${rejectedNames.length})`;
     $("rejectedSection").hidden = rejectedNames.length === 0;
     for (const proposal of rows) {
@@ -234,19 +246,19 @@
       name.textContent = fullName(proposal);
       const meta = document.createElement("p");
       meta.className = "proposal-meta";
-      meta.textContent = `${(proposal.articles || []).length} article(s) · refusée le ${formatDate(proposal.rejectedAt)}`;
+      meta.textContent = `${(proposal.articles || []).length} article(s) · rejected on ${formatDate(proposal.rejectedAt)}`;
       info.append(name, meta);
       if ((proposal.articles || []).length) {
         const details = document.createElement("details");
         const summary = document.createElement("summary");
-        summary.textContent = "Afficher les articles de la proposition";
+        summary.textContent = "Show proposal articles";
         details.appendChild(summary);
         for (const article of proposal.articles) addArticleEvidence(details, article);
         info.appendChild(details);
       }
       const restore = document.createElement("button");
       restore.type = "button";
-      restore.textContent = "Rouvrir la proposition";
+      restore.textContent = "Reopen proposal";
       restore.addEventListener("click", () => decideProposal("restore", proposal));
       card.append(info, restore);
       container.appendChild(card);
@@ -257,15 +269,15 @@
     const filter = $("proposalSearch").value || "";
     const list = $("proposalList");
     list.replaceChildren();
-    const f = filter.toLocaleLowerCase("fr");
-    const rows = proposals.filter((p) => !f || fullName(p).toLocaleLowerCase("fr").includes(f));
-    $("proposalsCount").textContent = `${proposals.length} en attente` + (f ? ` · ${rows.length} affichée(s)` : "");
+    const normalizedFilter = filter.toLowerCase();
+    const rows = proposals.filter((p) => !normalizedFilter || fullName(p).toLowerCase().includes(normalizedFilter));
+    $("proposalsCount").textContent = `${proposals.length} pending` + (normalizedFilter ? ` · ${rows.length} shown` : "");
     $("reviewBadge").textContent = String(proposals.length);
 
     if (!rows.length) {
       const empty = document.createElement("div");
       empty.className = "empty-state";
-      empty.textContent = proposals.length ? "Aucune proposition ne correspond à ce filtre." : "Aucun nom en attente. Les prochains noms détectés dans les flux apparaîtront ici pour être vérifiés.";
+      empty.textContent = proposals.length ? "No proposals match this filter." : "No names are pending. Newly detected names from the feeds will appear here for review.";
       list.appendChild(empty);
     }
 
@@ -277,11 +289,11 @@
       const identity = document.createElement("div");
       identity.className = "proposal-identity";
       const title = document.createElement("h3");
-      title.textContent = fullName(proposal) || "Nom non renseigné";
+      title.textContent = fullName(proposal) || "Name not provided";
       const meta = document.createElement("p");
       meta.className = "proposal-meta";
       const articles = Array.isArray(proposal.articles) ? proposal.articles : [];
-      meta.textContent = `${articles.length} article(s) justificatif(s) · première détection : ${formatDate(proposal.firstSeen)}`;
+      meta.textContent = `${articles.length} supporting article(s) · first detected: ${formatDate(proposal.firstSeen)}`;
       identity.append(title, meta);
 
       const actions = document.createElement("div");
@@ -289,12 +301,12 @@
       const approve = document.createElement("button");
       approve.className = "approve";
       approve.type = "button";
-      approve.textContent = "Ajouter à la liste";
+      approve.textContent = "Add to active list";
       approve.addEventListener("click", () => decideProposal("approve", proposal));
       const reject = document.createElement("button");
       reject.className = "danger";
       reject.type = "button";
-      reject.textContent = "Refuser";
+      reject.textContent = "Reject";
       reject.addEventListener("click", () => decideProposal("reject", proposal));
       actions.append(approve, reject);
       heading.append(identity, actions);
@@ -312,7 +324,7 @@
   async function decideProposal(action, proposal) {
     const result = await sendMessage({ type: "REVIEW_PROPOSAL", action, name: fullName(proposal) });
     if (!result || !result.ok) {
-      toast("Impossible de traiter cette proposition. Actualisez le panneau et réessayez.");
+      toast("Could not process this proposal. Refresh the panel and try again.");
       return;
     }
     proposals = await PNStore.getProposals();
@@ -322,10 +334,10 @@
     renderNames($("nameSearch").value);
     if (action === "approve") {
       toast(result.wikipediaAdded
-        ? "Nom ajouté ; lien Wikipédia placé en premier ✔"
-        : "Nom ajouté ; aucune page Wikipédia exacte trouvée.");
-    } else if (action === "reject") toast("Proposition refusée ; elle sera reproposée si un article plus récent la mentionne.");
-    else toast("Proposition rouverte pour vérification.");
+        ? "Name added; Wikipedia link placed first ✔"
+        : "Name added; no exact Wikipedia page was found.");
+    } else if (action === "reject") toast("Proposal rejected; it may return if a newer article mentions the name.");
+    else toast("Proposal reopened for review.");
   }
 
   $("proposalSearch").addEventListener("input", renderReview);
@@ -333,17 +345,17 @@
   $("enrichWikipedia").addEventListener("click", async () => {
     const button = $("enrichWikipedia");
     button.disabled = true;
-    button.textContent = "Recherche des pages Wikipédia…";
+    button.textContent = "Searching Wikipedia pages…";
     const result = await sendMessage({ type: "ENRICH_WIKIPEDIA" });
     button.disabled = false;
-    button.textContent = "Compléter les liens Wikipédia manquants";
+    button.textContent = "Find missing Wikipedia links";
     if (!result || !result.ok) {
-      toast("La recherche Wikipédia a échoué. Réessayez plus tard.");
+      toast("Wikipedia lookup failed. Try again later.");
       return;
     }
     people = await PNStore.getPeople();
     renderNames($("nameSearch").value);
-    toast(`${result.added} lien(s) Wikipédia ajouté(s) en tête des articles.`);
+    toast(`${result.added} Wikipedia link(s) added at the top of the article list.`);
   });
 
   // ---------- Configuration ----------
@@ -363,19 +375,19 @@
   async function saveConfig(patch, msg) {
     config = { ...config, ...patch };
     await PNStore.setConfig(config);
-    toast(msg || "Configuration enregistrée ✔");
+    toast(msg || "Settings saved ✔");
   }
 
   $("saveThemes").addEventListener("click", () => saveConfig({
     description: $("cfgDescription").value.trim(),
     keywords: linesToArr($("cfgKeywords").value),
     minKeywords: Math.max(1, parseInt($("cfgMinKeywords").value, 10) || 1),
-  }, "Thématiques enregistrées ✔"));
+  }, "Topics saved ✔"));
 
   $("saveExclusions").addEventListener("click", () => saveConfig({
     excludedWords: linesToArr($("cfgExcludedWords").value),
     excludedNames: linesToArr($("cfgExcludedNames").value),
-  }, "Exclusions enregistrées ✔"));
+  }, "Exclusions saved ✔"));
 
   $("saveFeeds").addEventListener("click", () => {
     const rawLanguage = $("cfgGoogleNewsLanguage").value.trim();
@@ -388,10 +400,10 @@
       googleNewsSearch: $("cfgGoogleNewsSearch").checked,
       googleNewsLanguage: language,
       googleNewsRegion: region,
-    }, "Flux & période enregistrés ✔");
+    }, "Feeds & period saved ✔");
   });
 
-  // ---------- Collecte manuelle ----------
+  // ---------- Manual collection ----------
   function sendMessage(message) {
     return new Promise((resolve) => {
       try { api.runtime.sendMessage(message, resolve); }
@@ -401,20 +413,20 @@
 
   $("runBtn").addEventListener("click", async () => {
     $("runBtn").disabled = true;
-    $("runStatus").textContent = "Collecte en cours…";
+    $("runStatus").textContent = "Collection in progress…";
     const result = await sendMessage({ type: "RUN_COLLECTION" });
     if (result && result.ok) {
       const stats = result.stats;
-      $("runStatus").textContent = `Terminé : ${stats.newArticles} articles analysés · ${stats.newProposals} nouveaux noms à vérifier · ${stats.totalProposals} en attente.`;
+      $("runStatus").textContent = `Complete: ${stats.newArticles} articles analyzed · ${stats.newProposals} new names to review · ${stats.totalProposals} pending.`;
       people = await PNStore.getPeople();
       proposals = await PNStore.getProposals();
       rejectedNames = await PNStore.getRejectedNames();
       renderNames($("nameSearch").value);
       renderReview();
     } else if (result && result.skipped) {
-      $("runStatus").textContent = "Une collecte est déjà en cours.";
+      $("runStatus").textContent = "A collection is already in progress.";
     } else {
-      $("runStatus").textContent = "Échec (voir la console du service worker).";
+      $("runStatus").textContent = "Collection failed (see the service worker console).";
     }
     $("runBtn").disabled = false;
   });

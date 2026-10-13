@@ -1,15 +1,15 @@
-// gnews.js — décode un lien Google News RSS (news.google.com/rss/articles/…)
-// vers l'URL réelle de l'article, via l'API batchexecute de Google News.
-// Portage JS de googlenewsdecoder. Renvoie l'URL d'origine si le décodage
-// échoue (repli sûr). Résultats mis en cache mémoire.
+// gnews.js — resolve a Google News RSS link (news.google.com/rss/articles/…)
+// to the original article URL through the Google News batchexecute API.
+// JavaScript port of googlenewsdecoder. Returns the original URL if decoding
+// fails (safe fallback); results are cached in memory.
 //
-// Exposé en global : pnDecodeGoogleNews(url) -> Promise<string>
+// Exposed globally as pnDecodeGoogleNews(url) -> Promise<string>.
 (function (root) {
   "use strict";
 
   const CACHE = new Map();
 
-  // fetch avec délai d'expiration (évite qu'un lien bloque toute la collecte).
+  // Add a timeout to fetch so one link cannot block collection.
   async function fetchWithTimeout(url, opts, timeoutMs) {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), timeoutMs || 15000);
@@ -34,7 +34,7 @@
       if (!m) { CACHE.set(url, url); return url; }
       const id = m[1];
 
-      // 1) Récupère signature + timestamp depuis la page de l'article.
+      // 1) Read the signature and timestamp from the article page.
       const r1 = await fetchWithTimeout("https://news.google.com/rss/articles/" + id, {
         headers: { "User-Agent": "Mozilla/5.0" },
         credentials: "omit",
@@ -52,7 +52,7 @@
         const freq = JSON.stringify([[["Fbv4je", inner]]]);
         const body = "f.req=" + encodeURIComponent(freq);
 
-        // 2) Appel batchexecute -> contient l'URL réelle.
+        // 2) Call batchexecute to retrieve the original URL.
         const r2 = await fetchWithTimeout(
           "https://news.google.com/_/DotsSplashUi/data/batchexecute",
           {
@@ -69,7 +69,7 @@
         if (um) resolved = um[0];
       }
     } catch (e) {
-      resolved = url; // repli
+      resolved = url; // fallback
     }
     CACHE.set(url, resolved);
     return resolved;

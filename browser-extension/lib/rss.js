@@ -1,8 +1,8 @@
-// rss.js — récupération et parsing des flux RSS/Atom SANS DOMParser
-// (indisponible dans un service worker Chrome MV3). Parsing par regex,
-// suffisant pour les items RSS 2.0 et les entries Atom.
+// rss.js — fetch and parse RSS/Atom feeds WITHOUT DOMParser (unavailable in a
+// Chrome MV3 service worker). Regex parsing is sufficient for RSS 2.0 items and
+// Atom entries.
 //
-// Exposé en global : pnFetchFeed(url) -> Promise<[{title, link, summary, date}]>
+// Exposed globally as pnFetchFeed(url) -> Promise<[{title, link, summary, date}]>.
 (function (root) {
   "use strict";
 
@@ -25,7 +25,7 @@
     return m ? m[1] : "";
   }
 
-  // Atom : <link href="…"/> — récupère l'attribut href (rel=alternate de préf.).
+  // Atom <link href="…"/>: read href, preferring rel=alternate.
   function pickAtomLink(block) {
     const links = block.match(/<link\b[^>]*>/gi) || [];
     let alt = null, first = null;
@@ -40,7 +40,7 @@
 
   function parseFeed(xml) {
     const items = [];
-    // RSS 2.0 : <item>…</item> ; Atom : <entry>…</entry>
+    // RSS 2.0 <item>…</item>; Atom <entry>…</entry>.
     const blocks = xml.match(/<(item|entry)\b[\s\S]*?<\/\1>/gi) || [];
     for (const block of blocks) {
       const isAtom = /^<entry/i.test(block);
@@ -51,7 +51,7 @@
       } else {
         link = decodeEntities(pick(block, "link"));
         if (!link) {
-          // certains flux mettent le lien en attribut/guid
+          // Some feeds place the link in an attribute or guid.
           link = decodeEntities(pick(block, "guid"));
         }
       }
@@ -83,7 +83,7 @@
         credentials: "omit",
         signal: ctrl.signal,
       });
-      if (!res.ok) throw new Error("HTTP " + res.status + " sur " + url);
+      if (!res.ok) throw new Error("HTTP " + res.status + " for " + url);
       const xml = await res.text();
       return parseFeed(xml);
     } finally {
@@ -92,7 +92,7 @@
   }
 
   root.pnFetchFeed = pnFetchFeed;
-  root.pnParseFeed = parseFeed; // exposé pour tests
+  root.pnParseFeed = parseFeed; // exposed for tests
   if (typeof module !== "undefined" && module.exports) {
     module.exports = { pnFetchFeed, parseFeed };
   }
