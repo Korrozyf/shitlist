@@ -1,0 +1,7 @@
+# Browser packages are generated locally and attached to GitHub Releases
+/*.zip
+/*.xpi
+
+# Local operating-system/editor files
+.DS_Store
+Thumbs.db

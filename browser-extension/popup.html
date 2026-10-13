@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shitlist 💩</title>
+  <style>
+    :root { --bleu: #1b3a6b; --accent: #2563eb; }
+    * { box-sizing: border-box; }
+    body { width: 300px; margin: 0; font: 13px/1.4 system-ui, -apple-system, sans-serif; color: #1f2937; }
+    header { background: var(--bleu); color: #fff; padding: 12px 14px; }
+    header h1 { margin: 0; font-size: 15px; font-weight: 600; }
+    .body { padding: 12px 14px; }
+    .row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .muted { color: #6b7280; }
+    .stat { font-weight: 600; }
+    button { font: inherit; cursor: pointer; border: 0; border-radius: 6px; padding: 8px 10px; }
+    .primary { background: var(--accent); color: #fff; width: 100%; }
+    .primary:disabled { opacity: .6; cursor: default; }
+    .link { background: none; color: var(--accent); padding: 0; text-decoration: underline; }
+    .switch { position: relative; display: inline-block; width: 42px; height: 24px; }
+    .switch input { display: none; }
+    .slider { position: absolute; inset: 0; background: #cbd5e1; border-radius: 999px; transition: .2s; }
+    .slider::before { content: ""; position: absolute; height: 18px; width: 18px; left: 3px; top: 3px; background: #fff; border-radius: 50%; transition: .2s; }
+    input:checked + .slider { background: #22c55e; }
+    input:checked + .slider::before { transform: translateX(18px); }
+    #status { margin-top: 8px; min-height: 16px; }
+    hr { border: 0; border-top: 1px solid #e5e7eb; margin: 12px 0; }
+  </style>
+</head>
+<body>
+  <header><h1>Shitlist 💩</h1></header>
+  <div class="body">
+    <div class="row">
+      <span>Extension active</span>
+      <label class="switch">
+        <input type="checkbox" id="enabled" />
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="row"><span class="muted">Noms dans la liste active</span><span class="stat" id="count">—</span></div>
+    <div class="row"><span class="muted">Noms à vérifier</span><span class="stat" id="proposalCount">—</span></div>
+    <div class="row"><span class="muted">Dernière collecte</span><span id="lastrun" class="muted">—</span></div>
+    <button class="primary" id="refresh">🔄 Rafraîchir maintenant</button>
+    <div id="status" class="muted"></div>
+    <hr />
+    <div class="row">
+      <button class="link" id="openOptions">⚙️ Examiner / régler</button>
+    </div>
+  </div>
+  <script src="popup.js"></script>
+</body>
+</html>

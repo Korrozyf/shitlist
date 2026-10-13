@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shitlist 💩 — Panneau de contrôle</title>
+  <link rel="stylesheet" href="options.css" />
+</head>
+<body>
+  <header>
+    <h1>Shitlist <span aria-hidden="true">💩</span> — Panneau de contrôle</h1>
+    <div class="actions">
+      <button id="runBtn" class="primary">🔄 Rafraîchir la liste maintenant</button>
+      <span id="runStatus" class="muted"></span>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" data-tab="names">Noms</button>
+    <button class="tab" data-tab="review">Revue des noms <span id="reviewBadge" class="tab-badge">0</span></button>
+    <button class="tab" data-tab="themes">Thématiques &amp; mots-clés</button>
+    <button class="tab" data-tab="exclusions">Mots &amp; noms exclus</button>
+    <button class="tab" data-tab="feeds">Flux &amp; période</button>
+  </nav>
+
+  <!-- ===== Noms ===== -->
+  <section id="tab-names" class="panel active">
+    <div class="toolbar">
+      <input type="search" id="nameSearch" placeholder="Filtrer par nom…" />
+      <span class="muted" id="namesCount"></span>
+      <span class="grow"></span>
+      <button id="addName">+ Ajouter une personne</button>
+      <button id="enrichWikipedia" type="button">Compléter les liens Wikipédia manquants</button>
+      <button id="saveNames" class="primary">💾 Enregistrer les noms</button>
+    </div>
+    <p class="hint">Les liens s'ouvrent individuellement dans un nouvel onglet. Quand un lien Wikipédia est enregistré, il apparaît en premier. À l'approbation d'un nom, une recherche de page Wikipédia exacte est tentée ; le bouton permet de compléter les personnes déjà dans la liste.</p>
+    <div class="table-wrap">
+      <table id="namesTable">
+        <thead>
+          <tr><th>Prénom</th><th>Nom</th><th>Articles</th><th>Articles associés (liens cliquables)</th><th></th></tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== Revue humaine des propositions ===== -->
+  <section id="tab-review" class="panel">
+    <h2>Noms proposés à la vérification</h2>
+    <p class="review-notice"><strong>À savoir :</strong> une proposition signifie seulement qu'un nom a été détecté dans un article correspondant aux mots-clés. Cela ne détermine ni le rôle de la personne dans l'article ni une quelconque responsabilité. Vérifiez l'article avant d'ajouter le nom à la liste active.</p>
+    <div class="toolbar">
+      <input type="search" id="proposalSearch" placeholder="Filtrer les propositions…" />
+      <span class="muted" id="proposalsCount"></span>
+    </div>
+    <div id="proposalList" class="proposal-list"></div>
+    <details id="rejectedSection" class="rejected-section">
+      <summary>Propositions refusées <span id="rejectedCount">(0)</span></summary>
+      <div id="rejectedList" class="rejected-list"></div>
+    </details>
+  </section>
+
+  <!-- ===== Thématiques ===== -->
+  <section id="tab-themes" class="panel">
+    <label>Description du thème
+      <input type="text" id="cfgDescription" />
+    </label>
+    <label>Mots-clés (un par ligne). Un article est retenu s'il en contient au moins <em>N</em>.
+      <textarea id="cfgKeywords" rows="12"></textarea>
+    </label>
+    <label>Nombre minimum de mots-clés (N)
+      <input type="number" id="cfgMinKeywords" min="1" step="1" />
+    </label>
+    <button id="saveThemes" class="primary">💾 Enregistrer les thématiques</button>
+  </section>
+
+  <!-- ===== Exclusions ===== -->
+  <section id="tab-exclusions" class="panel">
+    <label>Mots interdits (un par ligne) — si un mot du nom figure ici, le nom est rejeté.
+      <textarea id="cfgExcludedWords" rows="10"></textarea>
+    </label>
+    <label>Noms complets exclus (un par ligne).
+      <textarea id="cfgExcludedNames" rows="8"></textarea>
+    </label>
+    <button id="saveExclusions" class="primary">💾 Enregistrer les exclusions</button>
+  </section>
+
+  <!-- ===== Flux & période ===== -->
+  <section id="tab-feeds" class="panel">
+    <label class="check-label"><input type="checkbox" id="cfgGoogleNewsSearch" /> Générer des recherches Google Actualités à partir des mots-clés du thème</label>
+    <div class="form-grid">
+      <label>Langue (code court, par ex. fr)
+        <input type="text" id="cfgGoogleNewsLanguage" maxlength="5" />
+      </label>
+      <label>Pays (code ISO, par ex. FR)
+        <input type="text" id="cfgGoogleNewsRegion" maxlength="2" />
+      </label>
+    </div>
+    <p class="hint">Les mots-clés sont regroupés en requêtes OR de taille limitée ; les flux personnalisés ci-dessous sont interrogés en complément.</p>
+    <label>Flux RSS personnalisés (un par ligne).
+      <textarea id="cfgFeeds" rows="12"></textarea>
+    </label>
+    <label>Période : ne retenir que les articles publiés depuis N mois (0 = illimité).
+      <input type="number" id="cfgMonths" min="0" step="1" />
+    </label>
+    <button id="saveFeeds" class="primary">💾 Enregistrer les flux &amp; période</button>
+  </section>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="lib/config.js"></script>
+  <script src="lib/store.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>
