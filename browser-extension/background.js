@@ -96,8 +96,9 @@ function waitForReviews() {
   return REVIEW_REQUESTS ? new Promise((resolve) => REVIEW_WAITERS.push(resolve)) : Promise.resolve();
 }
 
-// Seed optionnel : aucune liste n'est packagée par défaut. Si un fichier
-// data/names.json est ajouté au dossier, il sera utilisé comme liste initiale.
+// Seed optionnel : aucune liste n'est packagée par défaut. Si le fichier
+// browser-extension/data/names.json existe avant la construction, le paquet
+// l'embarque et il sera utilisé comme liste initiale.
 async function loadSeedPeople() {
   try {
     const res = await fetch(api.runtime.getURL("data/names.json"));

@@ -317,7 +317,7 @@
     } finally {
       if (observer) {
         observer.takeRecords();               // jette nos propres mutations
-        observer.observe(document.body, { childList: true, subtree: true });
+        observer.observe(document.body, { childList: true, characterData: true, subtree: true });
       }
     }
   }
@@ -369,12 +369,26 @@
       }, delay);
     }
 
-    // Contenu dynamique : on collecte les nœuds texte des sous-arbres ajoutés,
-    // puis on traite en lot (observer déconnecté pendant l'écriture).
+    // Contenu dynamique : on collecte les nœuds texte des sous-arbres ajoutés
+    // et ceux dont le contenu change sur place, puis on les traite en lot
+    // (observer déconnecté pendant l'écriture).
     let pending = false;
     const pendingRoots = [];
     observer = new MutationObserver((muts) => {
       for (const mut of muts) {
+        if (mut.type === "characterData") {
+          const node = mut.target;
+          const parent = node && node.parentNode;
+          if (node && node.nodeType === 3 && parent && !SKIP_TAGS.has(parent.nodeName) &&
+              !isOurPoop(parent) && !parent.isContentEditable) {
+            // Ce nœud a peut-être été modifié après son marquage. Retirer le
+            // marqueur adjacent avant le rescannage évite un doublon ou une
+            // marque périmée si le nom a disparu.
+            if (isOurPoop(node.nextSibling)) parent.removeChild(node.nextSibling);
+            pendingRoots.push(node);
+          }
+          continue;
+        }
         for (const node of mut.addedNodes) {
           if (isOurPoop(node)) continue;            // notre propre 💩
           if (node.nodeType === 1 && node.classList && node.classList.contains("press-name-link-menu")) continue;
@@ -399,7 +413,7 @@
         processNodes(textNodes, regex, termMap);
       }, 500);
     });
-    observer.observe(document.body, { childList: true, subtree: true });
+    observer.observe(document.body, { childList: true, characterData: true, subtree: true });
   }
 
   if (document.readyState === "loading") {

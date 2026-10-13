@@ -14,6 +14,11 @@ copy_extension() {
     cp "$EXT_DIR/$file" "$target_dir/"
   done
   cp -R "$EXT_DIR/lib" "$EXT_DIR/icons" "$target_dir/"
+  # Seul le jeu de données documenté est autorisé dans les paquets.
+  if [ -f "$EXT_DIR/data/names.json" ]; then
+    mkdir -p "$target_dir/data"
+    cp "$EXT_DIR/data/names.json" "$target_dir/data/names.json"
+  fi
   cp "$EXT_DIR/manifest.json" "$target_dir/manifest.json"
   cp "$OUT_DIR/LICENSE" "$target_dir/LICENSE"
 }

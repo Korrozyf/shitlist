@@ -40,12 +40,12 @@ l'article afin que l'utilisateur puisse vérifier pourquoi le nom a été repér
 > L'extension n'est pas (encore) publiée sur les magasins officiels. Des
 > paquets distincts sont générés car Chrome et Firefox n'utilisent pas la même
 > déclaration de tâche d'arrière-plan en Manifest V3 :
-> `shitlist_v2.3.1_chrome.zip` pour Chrome et `shitlist_v2.3.1_firefox.xpi`
+> `shitlist_v2.3.2_chrome.zip` pour Chrome et `shitlist_v2.3.2_firefox.xpi`
 > pour Firefox.
 
 ### Sur Chrome, Edge ou Brave
 
-1. Décompressez **`shitlist_v2.3.1_chrome.zip`** dans un dossier permanent.
+1. Décompressez **`shitlist_v2.3.2_chrome.zip`** dans un dossier permanent.
 2. Ouvrez `chrome://extensions` (sur Edge : `edge://extensions`) et activez
    **« Mode développeur »**.
 3. Cliquez sur **« Charger l'extension non empaquetée »** et choisissez le
@@ -59,7 +59,7 @@ La variante Chrome utilise `background.service_worker`, sans la clé
 
 1. Ouvrez `about:debugging#/runtime/this-firefox`.
 2. Cliquez sur **« Charger un module temporaire… »**.
-3. Sélectionnez **`shitlist_v2.3.1_firefox.xpi`**.
+3. Sélectionnez **`shitlist_v2.3.2_firefox.xpi`**.
 4. L'icône 💩 apparaît dans la barre d'outils.
 
 > ⚠️ Le chargement depuis `about:debugging` est temporaire : Firefox oublie le
@@ -162,8 +162,10 @@ page ; ni les articles associés, ni les thèmes suivis, ni les pages consultée
 sont envoyés à Wikipédia. Une page au même titre peut concerner un homonyme :
 ce lien est une référence à vérifier, pas une validation de l'identité. À la
 première installation, la liste active reste vide jusqu'à validation explicite
-d'un nom. Lors d'une mise à jour depuis une ancienne version, les noms déjà
-  présents sont conservés : leur origine ne peut pas être déterminée sûrement.
+d'un nom, sauf si le paquet contient le seed facultatif `data/names.json`, dont
+les personnes servent alors de liste initiale. Lors d'une mise à jour depuis une
+ancienne version, les noms déjà présents sont conservés : leur origine ne peut
+pas être déterminée sûrement.
 
 ---
 
@@ -240,11 +242,14 @@ laisser l'utilisateur choisir librement ses propres sources d'actualité.
     `.xpi` signé — installable même en dehors du magasin public.
   - **Chrome / Edge** : via le Chrome Web Store ou le magasin Edge (compte
     développeur requis).
-- **Liste de départ pré-remplie (optionnel).** Vous pouvez placer un fichier
-  `data/names.json` dans le dossier de l'extension avant de l'empaqueter : il
-  servira de liste initiale au premier lancement. Sans ce fichier, la liste
-  active démarre vide ; les noms détectés sont d'abord placés en revue et ne
-  l'intègrent qu'après validation.
+- **Liste de départ pré-remplie (optionnel).** Placez le fichier
+  `browser-extension/data/names.json` dans l'arborescence source avant de lancer
+  `tools/build.sh`. Le script inclut uniquement ce fichier dans les paquets
+  Chrome et Firefox ; les autres fichiers éventuellement présents dans `data/`
+  sont ignorés. Le seed sert de liste initiale au premier lancement. Sans ce
+  fichier, aucun dossier `data/` n'est ajouté et la liste active démarre vide ;
+  les noms détectés sont d'abord placés en revue et ne l'intègrent qu'après
+  validation.
 
 ---
 

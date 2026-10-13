@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Shitlist 💩",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Collecte des articles RSS, propose les noms détectés pour revue humaine, puis repère les noms validés sur les pages consultées.",
   "permissions": ["storage"],
   "host_permissions": ["<all_urls>"],

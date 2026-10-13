@@ -3,7 +3,7 @@
 [![Licence MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 Code source de l'extension Shitlist, publiée pour Chrome et Firefox. La version
-actuelle est **2.3.1**.
+actuelle est **2.3.2**.
 
 L'extension recherche des articles dans des flux RSS configurés et des recherches
 Google Actualités générées à partir des mots-clés choisis. Les noms détectés
@@ -22,6 +22,7 @@ confirmer explicitement l'ajout à sa liste. Les articles associés peuvent ensu
 - [Code de l'extension](browser-extension/)
 - [Tests automatisés](browser-extension/tests/)
 - [Outil de génération des paquets Chrome et Firefox](browser-extension/tools/build.sh)
+- [Journal des modifications](CHANGELOG.md)
 
 ## Construire et tester
 
@@ -35,9 +36,11 @@ node --test browser-extension/tests/*.test.js
 ```
 
 Le script vérifie la syntaxe JavaScript et génère à la racine du dépôt les
-archives `shitlist_v2.3.1_chrome.zip` et `shitlist_v2.3.1_firefox.xpi`. Chaque
-archive contient aussi le fichier `LICENSE` et reçoit le manifeste adapté à son
-navigateur. Les archives générées ne sont pas suivies par Git ; les versions
+archives `shitlist_v2.3.2_chrome.zip` et `shitlist_v2.3.2_firefox.xpi`. Chaque
+archive contient aussi le fichier `LICENSE`, reçoit le manifeste adapté à son
+navigateur et inclut uniquement `browser-extension/data/names.json` s'il existe,
+comme liste initiale facultative. Les autres fichiers de `data/` ne sont pas
+embarqués. Les archives générées ne sont pas suivies par Git ; les versions
 distribuées sont jointes aux Releases.
 
 ## Données et confidentialité
